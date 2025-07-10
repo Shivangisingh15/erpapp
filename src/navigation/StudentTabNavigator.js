@@ -187,7 +187,7 @@ const StudentTabNavigator = () => {
           left: 0,
           right: 0,
           height: Platform.OS === 'ios' ? 90 : 75,
-          backgroundColor: "#FFFFFF",
+          backgroundColor: "#FFFFFFF1",
           borderTopLeftRadius: 25,
           borderTopRightRadius: 25,
           paddingTop: 10,

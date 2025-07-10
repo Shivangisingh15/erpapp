@@ -1,1394 +1,2150 @@
-// import React, { useEffect, useState } from "react";
-// import {
-//   View,
-//   Text,
-//   StyleSheet,
-//   ScrollView,
-//   RefreshControl,
-//   TouchableOpacity,
-//   Image,
-// } from "react-native";
-// import AsyncStorage from "@react-native-async-storage/async-storage";
-// import Icon from "react-native-vector-icons/MaterialIcons";
-// import { SafeAreaView } from "react-native-safe-area-context";
-
-// import { colors } from "../../styles/colors";
-// import { typography } from "../../styles/typography";
-// import { spacing } from "../../styles/spacing";
-// import Header from "../../components/common/Header";
-
-// const StudentResultScreen = () => {
-//   const [refreshing, setRefreshing] = useState(false);
-//   const [activeTab, setActiveTab] = useState("current");
-//   const [resultData, setResultData] = useState({
-//     current: [
-//       {
-//         id: 1,
-//         subject: "Mathematics",
-//         marks: 85,
-//         totalMarks: 100,
-//         grade: "A",
-//         remarks: "Excellent understanding of calculus concepts.",
-//       },
-//       {
-//         id: 2,
-//         subject: "Science",
-//         marks: 92,
-//         totalMarks: 100,
-//         grade: "A+",
-//         remarks: "Outstanding performance in practical experiments.",
-//       },
-//       {
-//         id: 3,
-//         subject: "English",
-//         marks: 78,
-//         totalMarks: 100,
-//         grade: "B+",
-//         remarks: "Good comprehension, needs improvement in essay writing.",
-//       },
-//       {
-//         id: 4,
-//         subject: "History",
-//         marks: 88,
-//         totalMarks: 100,
-//         grade: "A",
-//         remarks: "Excellent understanding of historical events.",
-//       },
-//       {
-//         id: 5,
-//         subject: "Computer Science",
-//         marks: 95,
-//         totalMarks: 100,
-//         grade: "A+",
-//         remarks: "Exceptional programming skills and problem-solving ability.",
-//       },
-//     ],
-//     previous: [
-//       {
-//         id: 1,
-//         term: "Term 1 - 2024",
-//         results: [
-//           {
-//             id: 1,
-//             subject: "Mathematics",
-//             marks: 82,
-//             totalMarks: 100,
-//             grade: "A",
-//           },
-//           {
-//             id: 2,
-//             subject: "Science",
-//             marks: 88,
-//             totalMarks: 100,
-//             grade: "A",
-//           },
-//           {
-//             id: 3,
-//             subject: "English",
-//             marks: 75,
-//             totalMarks: 100,
-//             grade: "B",
-//           },
-//         ],
-//       },
-//       {
-//         id: 2,
-//         term: "Term 2 - 2024",
-//         results: [
-//           {
-//             id: 1,
-//             subject: "Mathematics",
-//             marks: 80,
-//             totalMarks: 100,
-//             grade: "A",
-//           },
-//           {
-//             id: 2,
-//             subject: "Science",
-//             marks: 90,
-//             totalMarks: 100,
-//             grade: "A+",
-//           },
-//           {
-//             id: 3,
-//             subject: "English",
-//             marks: 76,
-//             totalMarks: 100,
-//             grade: "B+",
-//           },
-//         ],
-//       },
-//     ],
-//   });
-
-//   useEffect(() => {
-//     loadResultData();
-//   }, []);
-
-//   const loadResultData = async () => {
-//     // In a real app, you'd make an API call here to fetch result data
-//     console.log("Loading result data");
-//     // Mock data already loaded in state
-//   };
-
-//   const onRefresh = async () => {
-//     setRefreshing(true);
-//     await loadResultData();
-//     setRefreshing(false);
-//   };
-
-//   const calculateTotalAndAverage = () => {
-//     if (resultData.current.length === 0)
-//       return { total: 0, average: 0, percentage: 0 };
-
-//     const total = resultData.current.reduce(
-//       (sum, subject) => sum + subject.marks,
-//       0
-//     );
-//     const totalPossible = resultData.current.reduce(
-//       (sum, subject) => sum + subject.totalMarks,
-//       0
-//     );
-//     const average = total / resultData.current.length;
-//     const percentage = (total / totalPossible) * 100;
-
-//     return {
-//       total,
-//       average: average.toFixed(2),
-//       percentage: percentage.toFixed(2),
-//     };
-//   };
-
-//   const renderCurrentResult = () => {
-//     const stats = calculateTotalAndAverage();
-
-//     return (
-//       <View>
-//         <View style={styles.summaryCard}>
-//           <Text style={styles.summaryTitle}>Current Term Performance</Text>
-//           <View style={styles.summaryRow}>
-//             <View style={styles.summaryItem}>
-//               <Text style={styles.summaryLabel}>Total Marks</Text>
-//               <Text style={styles.summaryValue}>{stats.total}</Text>
-//             </View>
-//             <View style={styles.summaryItem}>
-//               <Text style={styles.summaryLabel}>Average</Text>
-//               <Text style={styles.summaryValue}>{stats.average}</Text>
-//             </View>
-//             <View style={styles.summaryItem}>
-//               <Text style={styles.summaryLabel}>Percentage</Text>
-//               <Text style={styles.summaryValue}>{stats.percentage}%</Text>
-//             </View>
-//           </View>
-//         </View>
-
-//         <Text style={styles.sectionTitle}>Subject-wise Results</Text>
-//         {resultData.current.map((subject) => (
-//           <View key={subject.id} style={styles.resultCard}>
-//             <View style={styles.resultHeader}>
-//               <Text style={styles.subjectName}>{subject.subject}</Text>
-//               <View
-//                 style={[
-//                   styles.gradeBadge,
-//                   { backgroundColor: getGradeColor(subject.grade) },
-//                 ]}
-//               >
-//                 <Text style={styles.gradeText}>{subject.grade}</Text>
-//               </View>
-//             </View>
-
-//             <View style={styles.resultDetails}>
-//               <View style={styles.marksContainer}>
-//                 <Text style={styles.marksText}>{subject.marks}</Text>
-//                 <Text style={styles.totalMarksText}>/{subject.totalMarks}</Text>
-//               </View>
-//               {subject.remarks && (
-//                 <Text style={styles.remarksText}>{subject.remarks}</Text>
-//               )}
-//             </View>
-//           </View>
-//         ))}
-//       </View>
-//     );
-//   };
-
-//   const renderPreviousResults = () => {
-//     return (
-//       <View>
-//         {resultData.previous.map((term) => (
-//           <View key={term.id} style={styles.termCard}>
-//             <Text style={styles.termTitle}>{term.term}</Text>
-
-//             {term.results.map((subject) => (
-//               <View key={subject.id} style={styles.prevResultItem}>
-//                 <Text style={styles.prevSubjectName}>{subject.subject}</Text>
-//                 <View style={styles.prevResultRight}>
-//                   <Text style={styles.prevMarksText}>
-//                     {subject.marks}/{subject.totalMarks}
-//                   </Text>
-//                   <View
-//                     style={[
-//                       styles.miniGradeBadge,
-//                       { backgroundColor: getGradeColor(subject.grade) },
-//                     ]}
-//                   >
-//                     <Text style={styles.miniGradeText}>{subject.grade}</Text>
-//                   </View>
-//                 </View>
-//               </View>
-//             ))}
-
-//             <TouchableOpacity style={styles.viewDetailButton}>
-//               <Text style={styles.viewDetailText}>View Complete Result</Text>
-//               <Icon name="arrow-forward" size={16} color={colors.primary} />
-//             </TouchableOpacity>
-//           </View>
-//         ))}
-//       </View>
-//     );
-//   };
-
-//   const getGradeColor = (grade) => {
-//     switch (grade) {
-//       case "A+":
-//         return colors.success + "30";
-//       case "A":
-//         return colors.success + "20";
-//       case "B+":
-//         return colors.info + "30";
-//       case "B":
-//         return colors.info + "20";
-//       case "C":
-//         return colors.warning + "30";
-//       case "D":
-//         return colors.warning + "20";
-//       default:
-//         return colors.error + "20";
-//     }
-//   };
-
-//   return (
-//     <SafeAreaView style={styles.container}>
-//       <Header title="Academic Results" />
-//       <View style={styles.tabContainer}>
-//         <TouchableOpacity
-//           style={[
-//             styles.tabButton,
-//             activeTab === "current" ? styles.activeTab : {},
-//           ]}
-//           onPress={() => setActiveTab("current")}
-//         >
-//           <Text
-//             style={[
-//               styles.tabText,
-//               activeTab === "current" ? styles.activeTabText : {},
-//             ]}
-//           >
-//             Current Term
-//           </Text>
-//         </TouchableOpacity>
-//         <TouchableOpacity
-//           style={[
-//             styles.tabButton,
-//             activeTab === "previous" ? styles.activeTab : {},
-//           ]}
-//           onPress={() => setActiveTab("previous")}
-//         >
-//           <Text
-//             style={[
-//               styles.tabText,
-//               activeTab === "previous" ? styles.activeTabText : {},
-//             ]}
-//           >
-//             Previous Terms
-//           </Text>
-//         </TouchableOpacity>
-//       </View>
-
-//       <ScrollView
-//         style={styles.scrollView}
-//         refreshControl={
-//           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-//         }
-//       >
-//         {activeTab === "current"
-//           ? renderCurrentResult()
-//           : renderPreviousResults()}
-//       </ScrollView>
-//     </SafeAreaView>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: colors.background,
-//   },
-//   scrollView: {
-//     flex: 1,
-//     padding: spacing.medium,
-//   },
-//   tabContainer: {
-//     flexDirection: "row",
-//     borderBottomWidth: 1,
-//     borderBottomColor: colors.border,
-//   },
-//   tabButton: {
-//     flex: 1,
-//     padding: spacing.medium,
-//     alignItems: "center",
-//   },
-//   activeTab: {
-//     borderBottomWidth: 2,
-//     borderBottomColor: colors.primary,
-//   },
-//   tabText: {
-//     ...typography.button,
-//     color: colors.textLight,
-//   },
-//   activeTabText: {
-//     color: colors.primary,
-//     fontWeight: "600",
-//   },
-//   summaryCard: {
-//     backgroundColor: colors.white,
-//     borderRadius: 8,
-//     padding: spacing.medium,
-//     marginTop: spacing.small,
-//     marginBottom: spacing.medium,
-//     elevation: 2,
-//     shadowColor: colors.shadow,
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 4,
-//   },
-//   summaryTitle: {
-//     ...typography.h3,
-//     color: colors.text,
-//     marginBottom: spacing.small,
-//   },
-//   summaryRow: {
-//     flexDirection: "row",
-//     justifyContent: "space-between",
-//   },
-//   summaryItem: {
-//     alignItems: "center",
-//     flex: 1,
-//   },
-//   summaryLabel: {
-//     ...typography.caption,
-//     color: colors.textLight,
-//   },
-//   summaryValue: {
-//     ...typography.h3,
-//     color: colors.text,
-//   },
-//   sectionTitle: {
-//     ...typography.h3,
-//     color: colors.text,
-//     marginVertical: spacing.small,
-//   },
-//   resultCard: {
-//     backgroundColor: colors.white,
-//     borderRadius: 8,
-//     padding: spacing.medium,
-//     marginBottom: spacing.medium,
-//     elevation: 2,
-//     shadowColor: colors.shadow,
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 4,
-//   },
-//   resultHeader: {
-//     flexDirection: "row",
-//     justifyContent: "space-between",
-//     alignItems: "center",
-//     marginBottom: spacing.small,
-//   },
-//   subjectName: {
-//     ...typography.subtitle,
-//     fontWeight: "bold",
-//   },
-//   gradeBadge: {
-//     paddingHorizontal: spacing.small,
-//     paddingVertical: spacing.xSmall,
-//     borderRadius: 4,
-//   },
-//   gradeText: {
-//     ...typography.caption,
-//     fontWeight: "600",
-//   },
-//   resultDetails: {
-//     marginTop: spacing.small,
-//   },
-//   marksContainer: {
-//     flexDirection: "row",
-//     alignItems: "baseline",
-//   },
-//   marksText: {
-//     ...typography.h2,
-//     fontWeight: "bold",
-//     color: colors.text,
-//   },
-//   totalMarksText: {
-//     ...typography.body,
-//     color: colors.textLight,
-//     marginLeft: 2,
-//   },
-//   remarksText: {
-//     ...typography.body,
-//     color: colors.textLight,
-//     marginTop: spacing.xSmall,
-//     fontStyle: "italic",
-//   },
-//   termCard: {
-//     backgroundColor: colors.white,
-//     borderRadius: 8,
-//     padding: spacing.medium,
-//     marginBottom: spacing.medium,
-//     elevation: 2,
-//     shadowColor: colors.shadow,
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 4,
-//   },
-//   termTitle: {
-//     ...typography.h3,
-//     color: colors.text,
-//     marginBottom: spacing.medium,
-//     fontWeight: "600",
-//   },
-//   prevResultItem: {
-//     flexDirection: "row",
-//     justifyContent: "space-between",
-//     alignItems: "center",
-//     paddingVertical: spacing.small,
-//     borderBottomWidth: 1,
-//     borderBottomColor: colors.lightGrey,
-//   },
-//   prevSubjectName: {
-//     ...typography.body,
-//     fontWeight: "500",
-//   },
-//   prevResultRight: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//   },
-//   prevMarksText: {
-//     ...typography.body,
-//     marginRight: spacing.small,
-//   },
-//   miniGradeBadge: {
-//     paddingHorizontal: spacing.xSmall,
-//     paddingVertical: 2,
-//     borderRadius: 4,
-//   },
-//   miniGradeText: {
-//     ...typography.caption,
-//     fontWeight: "600",
-//     fontSize: 10,
-//   },
-//   viewDetailButton: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     justifyContent: "center",
-//     padding: spacing.small,
-//     marginTop: spacing.medium,
-//   },
-//   viewDetailText: {
-//     ...typography.button,
-//     color: colors.primary,
-//     marginRight: spacing.xSmall,
-//   },
-// });
-
-// export default StudentResultScreen;
-import React, { useEffect, useState } from "react";
+// src/screens/student/StudentResultsScreen.js
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  RefreshControl,
   TouchableOpacity,
-  Dimensions,
   Alert,
+  Animated,
+  Dimensions,
+  RefreshControl,
+  StatusBar,
+  Platform,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 
 import Header from "../../components/common/Header";
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
-// Modern Professional Theme
-const theme = {
-  colors: {
-    primary: '#1e3a8a',
-    primaryLight: '#2563EB',
-    secondary: '#64748B',
-    
-    background: '#F8FAFC',
-    surface: '#FFFFFF',
-    border: '#E2E8F0',
-    borderLight: '#F1F5F9',
-    
-    text: '#0F172A',
-    textSecondary: '#475569',
-    textLight: '#64748B',
-    white: '#FFFFFF',
-    
-    success: '#059669',
-    warning: '#D97706',
-    error: '#DC2626',
-    info: '#0EA5E9',
-    
-    green50: '#F0FDF4',
-    green100: '#DCFCE7',
-    blue50: '#EFF6FF',
-    blue100: '#DBEAFE',
-    orange50: '#FFF7ED',
-    orange100: '#FFEDD5',
-    red50: '#FEF2F2',
-    red100: '#FEE2E2',
-  },
+// Vibrant, Child-Friendly Color Palette
+const colors = {
+  // Main colors
+  primary: '#4f46e5',
+  primaryLight: '#6366f1',
+  primaryDark: '#3730a3',
   
-  spacing: {
-    xs: 4,
-    sm: 8,
-    md: 12,
-    lg: 16,
-    xl: 20,
-    xxl: 24,
-    xxxl: 32,
-  },
+  // Subject colors
+  physics: '#ef4444',      // Red for Physics
+  physicsLight: '#f87171',
+  physicsSoft: '#fee2e2',
   
-  borderRadius: {
-    sm: 8,
-    md: 12,
-    lg: 16,
-    xl: 20,
-  },
+  chemistry: '#10b981',    // Green for Chemistry  
+  chemistryLight: '#34d399',
+  chemistrySoft: '#d1fae5',
   
-  shadows: {
-    card: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 3,
-    },
-    light: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
-      shadowRadius: 4,
-      elevation: 2,
-    },
-  }
+  mathematics: '#3b82f6',  // Blue for Mathematics
+  mathematicsLight: '#60a5fa',
+  mathematicsSoft: '#dbeafe',
+  
+  // Achievement colors
+  gold: '#fbbf24',
+  goldLight: '#fcd34d',
+  goldSoft: '#fef3c7',
+  
+  silver: '#9ca3af',
+  silverLight: '#d1d5db',
+  silverSoft: '#f3f4f6',
+  
+  bronze: '#d97706',
+  bronzeLight: '#f59e0b',
+  bronzeSoft: '#fef3c7',
+  
+  // Fun colors
+  purple: '#8b5cf6',
+  purpleLight: '#a78bfa',
+  purpleSoft: '#ede9fe',
+  
+  pink: '#ec4899',
+  pinkLight: '#f472b6',
+  pinkSoft: '#fce7f3',
+  
+  cyan: '#06b6d4',
+  cyanLight: '#22d3ee',
+  cyanSoft: '#cffafe',
+  
+  // Neutral colors
+  white: '#ffffff',
+  gray50: '#f9fafb',
+  gray100: '#f3f4f6',
+  gray200: '#e5e7eb',
+  gray300: '#d1d5db',
+  gray400: '#9ca3af',
+  gray500: '#6b7280',
+  gray600: '#4b5563',
+  gray700: '#374151',
+  gray800: '#1f2937',
+  gray900: '#111827',
+  
+  // Background
+  background: '#f8fafc',
+  surface: '#ffffff',
+  
+  // Text
+  textPrimary: '#1e293b',
+  textSecondary: '#475569',
+  textMuted: '#64748b',
+  textLight: '#94a3b8',
+  
+  // Status
+  success: '#10b981',
+  warning: '#f59e0b',
+  error: '#ef4444',
 };
 
-const StudentResultScreen = () => {
-  const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState("current");
-  const [loading, setLoading] = useState(false);
-  
-  const [resultData, setResultData] = useState({
-    current: {
-      term: "Final Term 2024",
-      examDate: "March 2024",
-      status: "Published",
-      totalSubjects: 5,
-      subjects: [
-        {
-          id: 1,
-          subject: "Mathematics",
-          marks: 85,
-          totalMarks: 100,
-          grade: "A",
-          gpa: 8.5,
-          rank: 3,
-          remarks: "Excellent understanding of calculus and algebra concepts.",
-          teacher: "Dr. Smith",
-        },
-        {
-          id: 2,
-          subject: "Physics",
-          marks: 92,
-          totalMarks: 100,
-          grade: "A+",
-          gpa: 9.2,
-          rank: 1,
-          remarks: "Outstanding performance in practical experiments and theory.",
-          teacher: "Prof. Johnson",
-        },
-        {
-          id: 3,
-          subject: "Chemistry",
-          marks: 78,
-          totalMarks: 100,
-          grade: "B+",
-          gpa: 7.8,
-          rank: 8,
-          remarks: "Good understanding, needs more practice in organic chemistry.",
-          teacher: "Dr. Williams",
-        },
-        {
-          id: 4,
-          subject: "English",
-          marks: 88,
-          totalMarks: 100,
-          grade: "A",
-          gpa: 8.8,
-          rank: 2,
-          remarks: "Excellent writing skills and literature comprehension.",
-          teacher: "Ms. Davis",
-        },
-        {
-          id: 5,
-          subject: "Computer Science",
-          marks: 95,
-          totalMarks: 100,
-          grade: "A+",
-          gpa: 9.5,
-          rank: 1,
-          remarks: "Exceptional programming skills and algorithm understanding.",
-          teacher: "Mr. Wilson",
-        },
-      ]
-    },
-    previous: [
-      {
-        id: 1,
-        term: "Mid Term 2024",
-        examDate: "January 2024",
-        overallGrade: "A",
-        percentage: 84.2,
-        rank: 4,
-        totalStudents: 45,
-        subjects: [
-          { subject: "Mathematics", marks: 82, totalMarks: 100, grade: "A" },
-          { subject: "Physics", marks: 88, totalMarks: 100, grade: "A" },
-          { subject: "Chemistry", marks: 75, totalMarks: 100, grade: "B" },
-          { subject: "English", marks: 86, totalMarks: 100, grade: "A" },
-          { subject: "Computer Science", marks: 90, totalMarks: 100, grade: "A+" },
-        ],
-      },
-      {
-        id: 2,
-        term: "Unit Test 2023",
-        examDate: "November 2023",
-        overallGrade: "A",
-        percentage: 81.6,
-        rank: 6,
-        totalStudents: 45,
-        subjects: [
-          { subject: "Mathematics", marks: 80, totalMarks: 100, grade: "A" },
-          { subject: "Physics", marks: 85, totalMarks: 100, grade: "A" },
-          { subject: "Chemistry", marks: 76, totalMarks: 100, grade: "B+" },
-          { subject: "English", marks: 84, totalMarks: 100, grade: "A" },
-          { subject: "Computer Science", marks: 83, totalMarks: 100, grade: "A" },
-        ],
-      },
-    ],
-  });
+const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  xxxl: 32,
+  xxxxl: 40,
+};
 
-  useEffect(() => {
-    loadResultData();
+const API_BASE_URL = 'https://erpbackend-gray.vercel.app/api/exams';
+
+// Mock data for testing - exact structure from your API
+const DEMO_RESULTS = {
+  cet: [
+    {
+      exam_name: "CET Sample exam",
+      exam_date: "2025-07-07",
+      rank: 7,
+      omr_roll_no: 250006,
+      student_name: "Varad",
+      batch: "2025-2026",
+      phy: 95,
+      chem: 94,
+      math: 96,
+      total: 285
+    },
+    {
+      exam_name: "CET Main test",
+      exam_date: "2025-07-01",
+      rank: 1,
+      omr_roll_no: 250006,
+      student_name: "Varad",
+      batch: "2025-2026",
+      phy: 98,
+      chem: 97,
+      math: 99,
+      total: 294
+    }
+  ],
+  neet: [],
+  jee_main: [],
+  jee_adv: []
+};
+
+const StudentResultsScreen = () => {
+  const navigation = useNavigation();
+  
+  // State Management
+  const [state, setState] = useState({
+    resultsData: null,
+    loading: true,
+    refreshing: false,
+    error: null,
+  });
+  
+  // Enhanced Animation References
+  const animations = {
+    fadeAnim: useRef(new Animated.Value(0)).current,
+    slideAnim: useRef(new Animated.Value(50)).current,
+    cardScale: useRef(new Animated.Value(0.9)).current,
+    // Celebratory animations
+    bounce: useRef(new Animated.Value(1)).current,
+    sparkle: useRef(new Animated.Value(0)).current,
+    confetti: useRef(new Animated.Value(0)).current,
+    // Loading animations
+    loadingDot1: useRef(new Animated.Value(0)).current,
+    loadingDot2: useRef(new Animated.Value(0)).current,
+    loadingDot3: useRef(new Animated.Value(0)).current,
+    // Subject progress animations
+    physicsProgress: useRef(new Animated.Value(0)).current,
+    chemistryProgress: useRef(new Animated.Value(0)).current,
+    mathProgress: useRef(new Animated.Value(0)).current,
+    // Achievement animations
+    achievementPulse: useRef(new Animated.Value(1)).current,
+    // Stagger animations
+    resultStagger: useRef(new Animated.Value(0)).current,
+    // Glow effect (replaced shimmer)
+    glow: useRef(new Animated.Value(0)).current,
+    // Fixed: Add missing animations
+    shimmer: useRef(new Animated.Value(-1)).current,
+    medalRotate: useRef(new Animated.Value(0)).current,
+  };
+
+  // Update state helper
+  const updateState = useCallback((updates) => {
+    setState(prev => ({ ...prev, ...updates }));
   }, []);
 
-  const loadResultData = async () => {
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Results loaded successfully");
-      setLoading(false);
-    }, 1000);
+  useEffect(() => {
+    initializeResults();
+    startContinuousAnimations();
+  }, []);
+
+  useEffect(() => {
+    if (state.resultsData) {
+      startCelebrationAnimations();
+    }
+  }, [state.resultsData]);
+
+  const initializeResults = async () => {
+    await loadResultsData();
   };
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await loadResultData();
-    setRefreshing(false);
-  };
-
-  const calculateCurrentStats = () => {
-    const subjects = resultData.current.subjects;
-    if (subjects.length === 0) return { total: 0, average: 0, percentage: 0, overallGrade: 'N/A' };
-
-    const total = subjects.reduce((sum, subject) => sum + subject.marks, 0);
-    const totalPossible = subjects.reduce((sum, subject) => sum + subject.totalMarks, 0);
-    const percentage = (total / totalPossible) * 100;
-    const averageGPA = subjects.reduce((sum, subject) => sum + subject.gpa, 0) / subjects.length;
-    
-    let overallGrade = 'F';
-    if (percentage >= 90) overallGrade = 'A+';
-    else if (percentage >= 80) overallGrade = 'A';
-    else if (percentage >= 70) overallGrade = 'B+';
-    else if (percentage >= 60) overallGrade = 'B';
-    else if (percentage >= 50) overallGrade = 'C';
-
-    return {
-      total,
-      percentage: percentage.toFixed(1),
-      averageGPA: averageGPA.toFixed(2),
-      overallGrade,
-      classRank: 2,
-      totalStudents: 45
+  const startContinuousAnimations = () => {
+    // Loading dots animation
+    const createLoadingAnimation = (animValue, delay) => {
+      return Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(animValue, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+          Animated.timing(animValue, {
+            toValue: 0,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+        ])
+      );
     };
+
+    createLoadingAnimation(animations.loadingDot1, 0).start();
+    createLoadingAnimation(animations.loadingDot2, 200).start();
+    createLoadingAnimation(animations.loadingDot3, 400).start();
+
+    // Shimmer effect
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(animations.shimmer, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(animations.shimmer, {
+          toValue: -1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Medal rotation
+    Animated.loop(
+      Animated.timing(animations.medalRotate, {
+        toValue: 1,
+        duration: 4000,
+        useNativeDriver: true,
+      })
+    ).start();
+
+    // Achievement pulse
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(animations.achievementPulse, {
+          toValue: 1.1,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(animations.achievementPulse, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Sparkle animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(animations.sparkle, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(animations.sparkle, {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Glow animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(animations.glow, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(animations.glow, {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
   };
 
-  const getGradeColor = (grade) => {
-    switch (grade) {
-      case "A+": return theme.colors.success;
-      case "A": return theme.colors.info;
-      case "B+": return theme.colors.warning;
-      case "B": return '#F59E0B';
-      case "C": return '#EF4444';
-      default: return theme.colors.error;
+  const startCelebrationAnimations = () => {
+    console.log("🎊 Starting celebration animations...");
+    
+    // Reset animations to ensure they start from the right values
+    animations.fadeAnim.setValue(0);
+    animations.slideAnim.setValue(50);
+    animations.cardScale.setValue(0.9);
+    animations.bounce.setValue(1);
+    animations.confetti.setValue(0);
+    animations.resultStagger.setValue(0);
+    animations.glow.setValue(0);
+    
+    // Entrance animations
+    Animated.parallel([
+      Animated.timing(animations.fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.spring(animations.slideAnim, {
+        toValue: 0,
+        tension: 50,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+      Animated.spring(animations.cardScale, {
+        toValue: 1,
+        tension: 60,
+        friction: 10,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Celebration effects
+    setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(animations.confetti, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.spring(animations.bounce, {
+          toValue: 1.2,
+          tension: 100,
+          friction: 5,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        Animated.spring(animations.bounce, {
+          toValue: 1,
+          tension: 100,
+          friction: 8,
+          useNativeDriver: true,
+        }).start();
+      });
+    }, 500);
+
+    // Staggered result animations
+    setTimeout(() => {
+      Animated.timing(animations.resultStagger, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }).start();
+    }, 800);
+
+    // Animate progress bars if we have results
+    const latestResult = getLatestResult();
+    if (latestResult) {
+      // Reset progress animations
+      animations.physicsProgress.setValue(0);
+      animations.chemistryProgress.setValue(0);
+      animations.mathProgress.setValue(0);
+      
+      setTimeout(() => {
+        Animated.timing(animations.physicsProgress, {
+          toValue: latestResult.phy / 100,
+          duration: 1000,
+          useNativeDriver: false,
+        }).start();
+      }, 1200);
+
+      setTimeout(() => {
+        Animated.timing(animations.chemistryProgress, {
+          toValue: latestResult.chem / 100,
+          duration: 1000,
+          useNativeDriver: false,
+        }).start();
+      }, 1400);
+
+      setTimeout(() => {
+        Animated.timing(animations.mathProgress, {
+          toValue: latestResult.math / 100,
+          duration: 1000,
+          useNativeDriver: false,
+        }).start();
+      }, 1600);
     }
   };
 
-  const getPerformanceLevel = (percentage) => {
-    if (percentage >= 90) return { level: 'Excellent', color: theme.colors.success };
-    if (percentage >= 80) return { level: 'Very Good', color: theme.colors.info };
-    if (percentage >= 70) return { level: 'Good', color: theme.colors.warning };
-    if (percentage >= 60) return { level: 'Average', color: '#F59E0B' };
-    return { level: 'Needs Improvement', color: theme.colors.error };
+  // API Helper Functions
+  const getAuthHeaders = async () => {
+    try {
+      const tokensString = await AsyncStorage.getItem("ERPTokens");
+      if (!tokensString) return null;
+      
+      const tokens = JSON.parse(tokensString);
+      return {
+        'Authorization': `Bearer ${tokens.accessToken}`,
+        'Content-Type': 'application/json',
+      };
+    } catch (error) {
+      console.error("Error getting auth headers:", error);
+      return null;
+    }
   };
 
-  const renderProgressBar = (percentage) => {
-    return (
-      <View style={styles.progressBarContainer}>
-        <View 
-          style={[
-            styles.progressBar, 
-            { 
-              width: `${percentage}%`,
-              backgroundColor: getPerformanceLevel(percentage).color 
-            }
-          ]} 
-        />
-      </View>
-    );
-  };
+  const loadResultsData = async () => {
+    console.log("=== Loading Results Data ===");
+    try {
+      updateState({ loading: true, error: null });
+      
+      const headers = await getAuthHeaders();
+      if (!headers) {
+        console.error("❌ No authentication tokens found");
+        throw new Error("No authentication tokens");
+      }
 
-  const renderCurrentResults = () => {
-    const stats = calculateCurrentStats();
-    const performance = getPerformanceLevel(parseFloat(stats.percentage));
+      // Extract user ID from token for API call
+      const tokensString = await AsyncStorage.getItem("ERPTokens");
+      let userId = null;
+      
+      if (tokensString) {
+        try {
+          const tokens = JSON.parse(tokensString);
+          console.log("🔑 Found tokens in storage");
+          if (tokens.accessToken) {
+            // Decode JWT to get user info (simple decode, not verification)
+            const base64Url = tokens.accessToken.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            
+            const decoded = JSON.parse(jsonPayload);
+            userId = decoded.user_id || decoded.id || decoded.sub || decoded.userId;
+            console.log("🔍 Decoded JWT payload:", decoded);
+            console.log("🔍 Extracted user ID from token:", userId);
+          }
+        } catch (decodeError) {
+          console.log("⚠️ Could not decode token for user ID:", decodeError);
+        }
+      }
 
-    return (
-      <View style={styles.tabContent}>
-        {/* No Results Available Message */}
-        <View style={styles.noResultsCard}>
-          <View style={styles.noResultsIcon}>
-            <Icon name="assignment" size={32} color={theme.colors.textLight} />
-          </View>
-          <Text style={styles.noResultsTitle}>Results Not Available</Text>
-          <Text style={styles.noResultsMessage}>
-            Your current term results haven't been published yet. Results will be available here once they are processed by the academic office.
-          </Text>
-          <TouchableOpacity 
-            style={styles.refreshButton}
-            onPress={onRefresh}
-          >
-            <Icon name="refresh" size={20} color={theme.colors.primary} />
-            <Text style={styles.refreshButtonText}>Check Again</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Demo Results Section */}
-        <View style={styles.demoSection}>
-          <Text style={styles.demoTitle}>Sample Result Format</Text>
-          <Text style={styles.demoSubtitle}>Here's how your results will appear once published:</Text>
+      console.log("✅ Auth headers obtained");
+      console.log("🔍 Headers to send:", headers);
+      
+      // Try different API endpoint variations with better structure
+      const baseUrl = 'https://erpbackend-gray.vercel.app/api/exams';
+      const endpoints = [
+        // Try the exact working endpoint from your example
+        { url: `${baseUrl}/getStudentResults`, method: 'GET', description: 'Original endpoint' },
+        // Try with user ID in different ways
+        { url: `${baseUrl}/getStudentResults/${userId}`, method: 'GET', description: 'With user ID in path' },
+        { url: `${baseUrl}/getStudentResults?userId=${userId}`, method: 'GET', description: 'With userId query param' },
+        { url: `${baseUrl}/getStudentResults?user_id=${userId}`, method: 'GET', description: 'With user_id query param' },
+        // Try POST method in case GET doesn't work
+        { url: `${baseUrl}/getStudentResults`, method: 'POST', body: { user_id: userId }, description: 'POST with user_id in body' },
+        // Try alternative endpoint names
+        { url: `${baseUrl}/student-results`, method: 'GET', description: 'Alternative endpoint name' },
+        { url: `${baseUrl}/results`, method: 'GET', description: 'Shorter endpoint name' },
+      ];
+      
+      let response = null;
+      let usedEndpoint = '';
+      let apiData = null;
+      
+      for (const endpoint of endpoints) {
+        if (!userId && endpoint.url.includes('${userId}')) {
+          console.log(`⏭️ Skipping ${endpoint.description} - no user ID available`);
+          continue;
+        }
+        
+        console.log(`🔗 Trying ${endpoint.description}: ${endpoint.url}`);
+        
+        try {
+          const fetchOptions = {
+            method: endpoint.method,
+            headers: {
+              ...headers,
+              // Ensure we're asking for JSON
+              'Accept': 'application/json',
+            },
+          };
           
-          {/* Overview Card */}
-          <View style={styles.overviewCard}>
-            <View style={styles.overviewHeader}>
-              <View>
-                <Text style={styles.termTitle}>{resultData.current.term}</Text>
-                <Text style={styles.examDate}>Exam Date: {resultData.current.examDate}</Text>
-              </View>
-              <View style={[styles.statusBadge, { backgroundColor: theme.colors.green50 }]}>
-                <Text style={[styles.statusText, { color: theme.colors.success }]}>
-                  {resultData.current.status}
-                </Text>
-              </View>
-            </View>
+          // Add body for POST requests
+          if (endpoint.method === 'POST' && endpoint.body) {
+            fetchOptions.body = JSON.stringify(endpoint.body);
+          }
+          
+          console.log("📤 Fetch options:", fetchOptions);
+          
+          response = await fetch(endpoint.url, fetchOptions);
+          
+          console.log("📡 Response status:", response.status);
+          console.log("📡 Response content-type:", response.headers.get('content-type'));
+          console.log("📡 Response headers:", Object.fromEntries(response.headers.entries()));
+          
+          // Check if we got JSON response (not HTML)
+          const contentType = response.headers.get('content-type');
+          const isJson = contentType && contentType.includes('application/json');
+          
+          if (response.ok && isJson) {
+            usedEndpoint = endpoint.description;
+            apiData = await response.json();
+            console.log("✅ Success with:", endpoint.description);
+            console.log("📊 Response data:", JSON.stringify(apiData, null, 2));
+            break;
+          } else if (response.ok && !isJson) {
+            // Got HTML instead of JSON - endpoint exists but wrong format
+            const htmlText = await response.text();
+            console.log("⚠️ Got HTML response instead of JSON:", htmlText.substring(0, 200));
+            console.log("🔍 This suggests the endpoint exists but returns HTML - might be a frontend route");
+          } else if (response.status === 404) {
+            // Log 404 but continue trying other endpoints
+            const errorText = await response.text();
+            console.log(`⚠️ 404 with ${endpoint.description}`);
+            console.log("📄 404 Response body:", errorText.substring(0, 200));
+          } else {
+            // Non-404 error
+            const errorText = await response.text();
+            console.log(`❌ Error ${response.status} with ${endpoint.description}:`, errorText.substring(0, 200));
+          }
+        } catch (fetchError) {
+          console.log(`❌ Network error with ${endpoint.description}:`, fetchError.message);
+        }
+      }
+      
+      // Handle the response
+      if (!apiData) {
+        console.log("❌ No successful API response from any endpoint");
+        
+        // If we got responses but they were all HTML, this suggests a routing issue
+        if (response && response.headers.get('content-type')?.includes('text/html')) {
+          console.log("🔍 All responses were HTML - API endpoint might not exist or need different authentication");
+          updateState({ 
+            resultsData: null, 
+            loading: false,
+            error: "API endpoint not found. Please contact support if this issue persists.",
+          });
+          return;
+        }
+        
+        // Otherwise treat as no results available
+        console.log("⚠️ No results available yet for user:", userId);
+        updateState({ 
+          resultsData: { cet: [], neet: [], jee_main: [], jee_adv: [] }, 
+          loading: false 
+        });
+        return;
+      }
 
-            <View style={styles.statsGrid}>
-              <View style={styles.statCard}>
-                <Text style={styles.statValue}>{stats.percentage}%</Text>
-                <Text style={styles.statLabel}>Overall</Text>
-                {renderProgressBar(parseFloat(stats.percentage))}
-              </View>
-              
-              <View style={styles.statCard}>
-                <Text style={styles.statValue}>{stats.overallGrade}</Text>
-                <Text style={styles.statLabel}>Grade</Text>
-                <View style={[styles.gradeIndicator, { backgroundColor: getGradeColor(stats.overallGrade) }]} />
-              </View>
-              
-              <View style={styles.statCard}>
-                <Text style={styles.statValue}>{stats.classRank}</Text>
-                <Text style={styles.statLabel}>Class Rank</Text>
-                <Text style={styles.rankSubtext}>of {stats.totalStudents}</Text>
-              </View>
-              
-              <View style={styles.statCard}>
-                <Text style={styles.statValue}>{stats.averageGPA}</Text>
-                <Text style={styles.statLabel}>GPA</Text>
-                <Text style={[styles.performanceText, { color: performance.color }]}>
-                  {performance.level}
-                </Text>
-              </View>
-            </View>
-          </View>
+      console.log("🔗 Successfully used:", usedEndpoint);
+      
+      if (apiData && apiData.status === 'success' && apiData.data) {
+        console.log("✅ API returned success status");
+        console.log("📊 Results data:", apiData.data);
+        console.log("📊 CET results count:", apiData.data?.cet?.length || 0);
+        console.log("📊 NEET results count:", apiData.data?.neet?.length || 0);
+        console.log("📊 JEE Main results count:", apiData.data?.jee_main?.length || 0);
+        console.log("📊 JEE Advanced results count:", apiData.data?.jee_adv?.length || 0);
+        
+        if (apiData.data.cet && apiData.data.cet.length > 0) {
+          console.log("📊 Latest CET result:", apiData.data.cet[0]);
+        }
+        
+        updateState({ resultsData: apiData.data, loading: false });
+        console.log("🎉 Results data loaded successfully!");
+      } else {
+        console.log("⚠️ API returned non-success status or no data:", apiData?.status);
+        updateState({ 
+          resultsData: { cet: [], neet: [], jee_main: [], jee_adv: [] }, 
+          loading: false,
+          error: "No results found. Your exam results will appear here once they're published."
+        });
+      }
+    } catch (error) {
+      console.error("❌ Failed to load results data:", error);
+      console.error("❌ Error name:", error.name);
+      console.error("❌ Error message:", error.message);
+      console.error("❌ Error stack:", error.stack);
+      
+      // Enhanced error handling
+      if (error.message.includes('Network request failed') || error.message.includes('fetch')) {
+        console.log("🌐 Network connectivity issue");
+        updateState({ 
+          resultsData: null, 
+          loading: false,
+          error: "Unable to connect to server. Please check your internet connection and try again.",
+        });
+      } else if (error.message.includes('404')) {
+        console.log("🔄 Treating 404 as no results available");
+        updateState({ 
+          resultsData: { cet: [], neet: [], jee_main: [], jee_adv: [] }, 
+          loading: false,
+          error: null
+        });
+      } else if (error.message.includes('No authentication tokens') || error.message.includes('401')) {
+        console.log("🔐 Authentication issue");
+        updateState({ 
+          resultsData: null, 
+          loading: false,
+          error: "Session expired. Please log in again to view your results.",
+        });
+      } else if (error.message.includes('500')) {
+        console.log("🔧 Server error");
+        updateState({ 
+          resultsData: null, 
+          loading: false,
+          error: "Server is temporarily unavailable. Please try again in a few minutes.",
+        });
+      } else {
+        console.log("❓ Unknown error");
+        updateState({ 
+          resultsData: null, 
+          loading: false,
+          error: "Something went wrong. Please try again later.",
+        });
+      }
+    }
+  };
 
-          {/* Subject Cards */}
-          <Text style={styles.sectionTitle}>Subject-wise Performance</Text>
-          {resultData.current.subjects.map((subject, index) => (
-            <View key={subject.id} style={styles.subjectCard}>
-              <View style={styles.subjectHeader}>
-                <View style={styles.subjectInfo}>
-                  <Text style={styles.subjectName}>{subject.subject}</Text>
-                  <Text style={styles.teacherName}>by {subject.teacher}</Text>
-                </View>
-                
-                <View style={styles.subjectStats}>
-                  <View style={styles.marksContainer}>
-                    <Text style={styles.marksText}>{subject.marks}</Text>
-                    <Text style={styles.totalMarksText}>/{subject.totalMarks}</Text>
-                  </View>
-                  <View style={[styles.gradeBadge, { backgroundColor: getGradeColor(subject.grade) }]}>
-                    <Text style={styles.gradeText}>{subject.grade}</Text>
-                  </View>
-                </View>
-              </View>
+  const onRefresh = useCallback(async () => {
+    updateState({ refreshing: true });
+    await loadResultsData();
+    updateState({ refreshing: false });
+  }, []);
 
-              <View style={styles.subjectDetails}>
-                <View style={styles.detailRow}>
-                  <View style={styles.detailItem}>
-                    <Icon name="trending-up" size={16} color={theme.colors.textLight} />
-                    <Text style={styles.detailText}>GPA: {subject.gpa}</Text>
-                  </View>
-                  <View style={styles.detailItem}>
-                    <Icon name="emoji-events" size={16} color={theme.colors.textLight} />
-                    <Text style={styles.detailText}>Rank: {subject.rank}</Text>
-                  </View>
-                </View>
-                
-                {renderProgressBar((subject.marks / subject.totalMarks) * 100)}
-                
-                {subject.remarks && (
-                  <View style={styles.remarksContainer}>
-                    <Icon name="comment" size={14} color={theme.colors.textLight} />
-                    <Text style={styles.remarksText}>{subject.remarks}</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          ))}
-        </View>
+  // Helper Functions
+  const getRankColor = (rank) => {
+    if (rank === 1) return { color: colors.gold, bg: colors.goldSoft };
+    if (rank === 2) return { color: colors.silver, bg: colors.silverSoft };
+    if (rank === 3) return { color: colors.bronze, bg: colors.bronzeSoft };
+    if (rank <= 10) return { color: colors.purple, bg: colors.purpleSoft };
+    return { color: colors.primary, bg: colors.gray100 };
+  };
+
+  const getRankIcon = (rank) => {
+    if (rank === 1) return "emoji-events";
+    if (rank === 2) return "military-tech";
+    if (rank === 3) return "star";
+    if (rank <= 10) return "workspace-premium";
+    return "trending-up";
+  };
+
+  const getSubjectColor = (subject) => {
+    switch (subject) {
+      case 'phy': return { color: colors.physics, light: colors.physicsLight, soft: colors.physicsSoft };
+      case 'chem': return { color: colors.chemistry, light: colors.chemistryLight, soft: colors.chemistrySoft };
+      case 'math': return { color: colors.mathematics, light: colors.mathematicsLight, soft: colors.mathematicsSoft };
+      default: return { color: colors.primary, light: colors.primaryLight, soft: colors.gray100 };
+    }
+  };
+
+  const getSubjectName = (subject) => {
+    switch (subject) {
+      case 'phy': return 'Physics';
+      case 'chem': return 'Chemistry';
+      case 'math': return 'Mathematics';
+      default: return subject;
+    }
+  };
+
+  const getSubjectIcon = (subject) => {
+    switch (subject) {
+      case 'phy': return 'science';
+      case 'chem': return 'biotech';
+      case 'math': return 'calculate';
+      default: return 'subject';
+    }
+  };
+
+  const getPerformanceMessage = (percentage) => {
+    if (percentage >= 95) return { message: "Outstanding! 🌟", color: colors.gold };
+    if (percentage >= 90) return { message: "Excellent! 🎉", color: colors.success };
+    if (percentage >= 85) return { message: "Very Good! 👏", color: colors.primary };
+    if (percentage >= 75) return { message: "Good Work! 💪", color: colors.cyan };
+    if (percentage >= 60) return { message: "Keep Going! 📚", color: colors.warning };
+    return { message: "Need Practice! 📖", color: colors.error };
+  };
+
+  const getCongratulationsMessage = (rank) => {
+    if (rank === 1) return "🏆 CHAMPION! You're #1! 🏆";
+    if (rank === 2) return "🥈 Amazing! Second place! 🥈";
+    if (rank === 3) return "🥉 Fantastic! Third place! 🥉";
+    if (rank <= 5) return "⭐ Top 5! You're a star! ⭐";
+    if (rank <= 10) return "🌟 Top 10! Keep shining! 🌟";
+    return "💫 Great effort! Keep improving! 💫";
+  };
+
+  // Helper function to get cartoon character based on performance
+  const getPerformanceCharacter = (percentage) => {
+    if (percentage >= 95) return "🦸‍♂️"; // Superhero for outstanding
+    if (percentage >= 90) return "🌟"; // Star for excellent
+    if (percentage >= 85) return "🎯"; // Target for very good
+    if (percentage >= 75) return "💪"; // Muscle for good work
+    if (percentage >= 60) return "📚"; // Books for keep going
+    return "🤔"; // Thinking face for need practice
+  };
+
+  // Helper function to get subject mascot
+  const getSubjectMascot = (subject) => {
+    switch (subject) {
+      case 'phy': return "🔬"; // Microscope for Physics
+      case 'chem': return "⚗️"; // Test tube for Chemistry
+      case 'math': return "🧮"; // Abacus for Mathematics
+      default: return "📖";
+    }
+  };
+
+  // Helper function to get rank mascot
+  const getRankMascot = (rank) => {
+    if (rank === 1) return "👑"; // Crown for 1st place
+    if (rank === 2) return "🥈"; // Silver medal
+    if (rank === 3) return "🥉"; // Bronze medal
+    if (rank <= 10) return "⭐"; // Star for top 10
+    return "🎖️"; // Medal for others
+  };
+
+  // Helper function to get random cheerful character
+  const getCheerfulCharacter = () => {
+    const characters = ["🐱", "🐶", "🐨", "🦊", "🐼", "🦁", "🐯", "🐸"];
+    return characters[Math.floor(Math.random() * characters.length)];
+  };
+
+  // Helper function to get all available results
+  const getAllResults = () => {
+    if (!state.resultsData) return [];
+    
+    const allResults = [];
+    
+    // Add CET results
+    if (state.resultsData.cet && state.resultsData.cet.length > 0) {
+      state.resultsData.cet.forEach(result => {
+        allResults.push({ ...result, examType: 'CET', examTypeColor: colors.primary });
+      });
+    }
+    
+    // Add NEET results
+    if (state.resultsData.neet && state.resultsData.neet.length > 0) {
+      state.resultsData.neet.forEach(result => {
+        allResults.push({ ...result, examType: 'NEET', examTypeColor: colors.success });
+      });
+    }
+    
+    // Add JEE Main results
+    if (state.resultsData.jee_main && state.resultsData.jee_main.length > 0) {
+      state.resultsData.jee_main.forEach(result => {
+        allResults.push({ ...result, examType: 'JEE Main', examTypeColor: colors.cyan });
+      });
+    }
+    
+    // Add JEE Advanced results
+    if (state.resultsData.jee_adv && state.resultsData.jee_adv.length > 0) {
+      state.resultsData.jee_adv.forEach(result => {
+        allResults.push({ ...result, examType: 'JEE Advanced', examTypeColor: colors.purple });
+      });
+    }
+    
+    // Sort by date (most recent first)
+    return allResults.sort((a, b) => new Date(b.exam_date) - new Date(a.exam_date));
+  };
+
+  // Helper function to get latest result from all exams
+  const getLatestResult = () => {
+    const allResults = getAllResults();
+    return allResults.length > 0 ? allResults[0] : null;
+  };
+
+  // Helper function to check if any results exist
+  const hasAnyResults = () => {
+    return getAllResults().length > 0;
+  };
+
+  // Component Renderers
+  const renderSparkleEffects = () => (
+    <View style={styles.sparkleContainer}>
+      {[...Array(6)].map((_, index) => (
+        <Animated.View
+          key={index}
+          style={[
+            styles.sparkle,
+            {
+              left: (width / 6) * index,
+              top: 50 + (index % 2) * 100,
+              opacity: animations.sparkle,
+              transform: [{
+                scale: animations.sparkle.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.5, 1.5]
+                })
+              }, {
+                rotate: animations.sparkle.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['0deg', '360deg']
+                })
+              }]
+            }
+          ]}
+        >
+          <Icon name="auto-awesome" size={12} color={colors.gold} />
+        </Animated.View>
+      ))}
+    </View>
+  );
+
+  const renderTrendingLoader = () => {
+    const dotStyle = (animValue, color) => ({
+      opacity: animValue.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0.3, 1]
+      }),
+      transform: [{
+        scale: animValue.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.8, 1.3]
+        })
+      }],
+      backgroundColor: color,
+    });
+
+    return (
+      <View style={styles.trendingLoader}>
+        <Animated.View style={[styles.loadingDot, dotStyle(animations.loadingDot1, colors.physics)]} />
+        <Animated.View style={[styles.loadingDot, dotStyle(animations.loadingDot2, colors.chemistry)]} />
+        <Animated.View style={[styles.loadingDot, dotStyle(animations.loadingDot3, colors.mathematics)]} />
       </View>
     );
   };
 
-  const renderPreviousResults = () => {
-    return (
-      <View style={styles.tabContent}>
-        {resultData.previous.length === 0 ? (
-          <View style={styles.noResultsCard}>
-            <Icon name="history" size={32} color={theme.colors.textLight} />
-            <Text style={styles.noResultsTitle}>No Previous Results</Text>
-            <Text style={styles.noResultsMessage}>
-              Previous term results will appear here once available.
-            </Text>
-          </View>
-        ) : (
-          <>
-            {resultData.previous.map((term) => (
-              <View key={term.id} style={styles.termCard}>
-                <View style={styles.termHeader}>
-                  <View>
-                    <Text style={styles.termTitle}>{term.term}</Text>
-                    <Text style={styles.examDate}>{term.examDate}</Text>
-                  </View>
-                  <View style={styles.termStats}>
-                    <Text style={styles.termPercentage}>{term.percentage}%</Text>
-                    <Text style={styles.termRank}>Rank {term.rank}/{term.totalStudents}</Text>
-                  </View>
-                </View>
+  const renderGlowEffect = (style) => (
+    <Animated.View
+      style={[
+        styles.glowOverlay,
+        style,
+        {
+          opacity: animations.glow.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0.1, 0.3]
+          })
+        }
+      ]}
+    />
+  );
 
-                <View style={styles.subjectsList}>
-                  {term.subjects.map((subject, index) => (
-                    <View key={index} style={styles.subjectRow}>
-                      <Text style={styles.subjectRowName}>{subject.subject}</Text>
-                      <View style={styles.subjectRowRight}>
-                        <Text style={styles.subjectRowMarks}>
-                          {subject.marks}/{subject.totalMarks}
-                        </Text>
-                        <View style={[styles.miniGradeBadge, { backgroundColor: getGradeColor(subject.grade) }]}>
-                          <Text style={styles.miniGradeText}>{subject.grade}</Text>
+  // Fixed: Add the missing renderShimmerEffect function
+  const renderShimmerEffect = (style) => (
+    <Animated.View
+      style={[
+        styles.shimmerOverlay,
+        style,
+        {
+          transform: [{
+            translateX: animations.shimmer.interpolate({
+              inputRange: [-1, 1],
+              outputRange: [-width, width]
+            })
+          }]
+        }
+      ]}
+    />
+  );
+
+  const renderLoadingScreen = () => (
+    <LinearGradient
+      colors={[colors.background, colors.gray50]}
+      style={styles.container}
+    >
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+      <Header title="Results" />
+      <View style={styles.loadingContainer}>
+        <Animated.View 
+          style={[
+            styles.loadingCard,
+            {
+              transform: [{ scale: animations.cardScale }]
+            }
+          ]}
+        >
+          <View style={styles.loadingMascot}>
+            <Text style={styles.loadingMascotText}>🤖</Text>
+          </View>
+          {renderTrendingLoader()}
+          <Text style={styles.loadingText}>
+            🔍 Loading your amazing results... {getCheerfulCharacter()}
+          </Text>
+          {renderShimmerEffect(styles.loadingShimmer)}
+        </Animated.View>
+      </View>
+    </LinearGradient>
+  );
+
+  const renderErrorMessage = () => {
+    if (!state.error) return null;
+
+    return (
+      <Animated.View style={[styles.errorContainer, { opacity: animations.fadeAnim }]}>
+        <LinearGradient
+          colors={[colors.error, colors.error + '20']}
+          style={styles.errorCard}
+        >
+          <View style={styles.errorIcon}>
+            <Icon name="sentiment-dissatisfied" size={32} color={colors.white} />
+          </View>
+          <Text style={styles.errorText}>{state.error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={onRefresh}>
+            <LinearGradient
+              colors={[colors.primary, colors.primaryLight]}
+              style={styles.retryGradient}
+            >
+              <Text style={styles.retryText}>Try Again</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </LinearGradient>
+      </Animated.View>
+    );
+  };
+
+  const renderOverallStats = () => {
+    console.log("🎯 renderOverallStats called");
+    console.log("📊 state.resultsData:", state.resultsData);
+    
+    const latestResult = getLatestResult();
+    if (!latestResult) {
+      console.log("❌ No results data for overall stats");
+      return null;
+    }
+
+    console.log("📊 Latest result:", latestResult);
+    
+    const percentage = (latestResult.total / 300) * 100;
+    const performance = getPerformanceMessage(percentage);
+
+    console.log("📊 Percentage:", percentage);
+    console.log("📊 Performance:", performance);
+
+    return (
+      <Animated.View 
+        style={[
+          styles.statsContainer,
+          {
+            opacity: animations.fadeAnim,
+            transform: [
+              { translateY: animations.slideAnim },
+              { scale: animations.bounce }
+            ]
+          }
+        ]}
+      >
+        <LinearGradient
+          colors={[latestResult.examTypeColor || colors.primary, colors.primaryLight]}
+          style={styles.statsCard}
+        >
+          <View style={styles.statsHeader}>
+            <Animated.View
+              style={{
+                transform: [{ scale: animations.achievementPulse }]
+              }}
+            >
+              <View style={styles.headerIconContainer}>
+                <Icon name="emoji-events" size={32} color={colors.gold} />
+                <Text style={styles.headerMascot}>{getRankMascot(latestResult.rank)}</Text>
+              </View>
+            </Animated.View>
+            <View style={styles.statsTitleContainer}>
+              <Text style={styles.statsTitle}>Latest Performance</Text>
+              <Text style={styles.examTypeLabel}>{latestResult.examType}</Text>
+            </View>
+          </View>
+          
+          <View style={styles.statsContent}>
+            {latestResult.rank <= 10 && (
+              <View style={styles.congratulationsContainer}>
+                <Text style={styles.congratulationsText}>
+                  {getCongratulationsMessage(latestResult.rank)}
+                </Text>
+              </View>
+            )}
+            
+            <View style={styles.totalScoreContainer}>
+              <Text style={styles.totalScore}>{latestResult.total}</Text>
+              <Text style={styles.totalOutOf}>/ 300</Text>
+              <Text style={styles.scoreMascot}>{getPerformanceCharacter(percentage)}</Text>
+            </View>
+            <Text style={styles.percentage}>{percentage.toFixed(1)}%</Text>
+            <View style={styles.performanceContainer}>
+              <Text style={[styles.performanceText, { color: performance.color }]}>
+                {performance.message}
+              </Text>
+            </View>
+            
+            <View style={styles.rankContainer}>
+              <View style={styles.rankBadge}>
+                <LinearGradient
+                  colors={[getRankColor(latestResult.rank).color, getRankColor(latestResult.rank).color + '80']}
+                  style={styles.rankBadgeGradient}
+                >
+                  <Icon name={getRankIcon(latestResult.rank)} size={20} color={colors.white} />
+                  <Text style={styles.rankText}>Rank {latestResult.rank}</Text>
+                </LinearGradient>
+              </View>
+            </View>
+            
+            <View style={styles.examInfoContainer}>
+              <Text style={styles.examNameDisplay}>{latestResult.exam_name}</Text>
+              <Text style={styles.examDateDisplay}>
+                {new Date(latestResult.exam_date).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </Text>
+            </View>
+          </View>
+          
+          {renderGlowEffect(styles.cardGlow)}
+        </LinearGradient>
+      </Animated.View>
+    );
+  };
+
+  const renderSubjectProgress = () => {
+    const latestResult = getLatestResult();
+    if (!latestResult) {
+      return null;
+    }
+
+    const subjects = [
+      { key: 'phy', score: latestResult.phy, animation: animations.physicsProgress },
+      { key: 'chem', score: latestResult.chem, animation: animations.chemistryProgress },
+      { key: 'math', score: latestResult.math, animation: animations.mathProgress },
+    ];
+
+    return (
+      <Animated.View 
+        style={[
+          styles.section,
+          {
+            opacity: animations.resultStagger,
+            transform: [{ translateY: animations.slideAnim }]
+          }
+        ]}
+      >
+        <View style={styles.sectionHeader}>
+          <LinearGradient
+            colors={[colors.purple, colors.purpleLight]}
+            style={styles.sectionIcon}
+          >
+            <Icon name="analytics" size={18} color={colors.white} />
+          </LinearGradient>
+          <Text style={styles.sectionTitle}>Subject Performance</Text>
+          <Text style={styles.sectionSubtitle}>({latestResult.examType})</Text>
+        </View>
+        
+        <View style={styles.subjectsContainer}>
+          {subjects.map((subject, index) => {
+            const subjectData = getSubjectColor(subject.key);
+            return (
+              <Animated.View
+                key={subject.key}
+                style={[
+                  styles.subjectCard,
+                  {
+                    opacity: animations.resultStagger,
+                    transform: [{
+                      translateY: animations.resultStagger.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [30, 0]
+                      })
+                    }]
+                  }
+                ]}
+              >
+                <LinearGradient
+                  colors={[subjectData.soft, colors.white]}
+                  style={styles.subjectCardGradient}
+                >
+                  <View style={styles.subjectHeader}>
+                    <LinearGradient
+                      colors={[subjectData.color, subjectData.light]}
+                      style={styles.subjectIcon}
+                    >
+                      <Icon name={getSubjectIcon(subject.key)} size={24} color={colors.white} />
+                    </LinearGradient>
+                    <View style={styles.subjectInfo}>
+                      <View style={styles.subjectTitleRow}>
+                        <Text style={styles.subjectName}>{getSubjectName(subject.key)}</Text>
+                        <Text style={styles.subjectMascot}>{getSubjectMascot(subject.key)}</Text>
+                      </View>
+                      <Text style={styles.subjectScore}>{subject.score} / 100</Text>
+                    </View>
+                  </View>
+                  
+                  <View style={styles.progressContainer}>
+                    <View style={styles.progressTrack}>
+                      <Animated.View
+                        style={[
+                          styles.progressBar,
+                          {
+                            backgroundColor: subjectData.color,
+                            width: subject.animation.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: ['0%', `${subject.score}%`]
+                            })
+                          }
+                        ]}
+                      />
+                    </View>
+                    <Text style={[styles.progressText, { color: subjectData.color }]}>
+                      {subject.score}%
+                    </Text>
+                  </View>
+                  
+                  {renderGlowEffect(styles.cardGlow)}
+                </LinearGradient>
+              </Animated.View>
+            );
+          })}
+        </View>
+      </Animated.View>
+    );
+  };
+
+  const renderExamHistory = () => {
+    const allResults = getAllResults();
+    if (allResults.length === 0) {
+      return null;
+    }
+
+    return (
+      <Animated.View 
+        style={[
+          styles.section,
+          {
+            opacity: animations.resultStagger,
+            transform: [{ translateY: animations.slideAnim }]
+          }
+        ]}
+      >
+        <View style={styles.sectionHeader}>
+          <LinearGradient
+            colors={[colors.cyan, colors.cyanLight]}
+            style={styles.sectionIcon}
+          >
+            <Icon name="history" size={18} color={colors.white} />
+          </LinearGradient>
+          <Text style={styles.sectionTitle}>Exam History</Text>
+          <Text style={styles.sectionSubtitle}>({allResults.length} exams)</Text>
+        </View>
+        
+        <View style={styles.historyContainer}>
+          {allResults.map((exam, index) => {
+            const rankData = getRankColor(exam.rank);
+            const percentage = (exam.total / 300) * 100;
+            const performance = getPerformanceMessage(percentage);
+            
+            return (
+              <Animated.View
+                key={`${exam.examType}-${index}`}
+                style={[
+                  styles.examCard,
+                  {
+                    opacity: animations.resultStagger,
+                    transform: [{
+                      translateX: animations.resultStagger.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [50, 0]
+                      })
+                    }]
+                  }
+                ]}
+              >
+                <LinearGradient
+                  colors={[colors.white, colors.gray50]}
+                  style={styles.examCardGradient}
+                >
+                  <View style={styles.examHeader}>
+                    <View style={styles.examInfo}>
+                      <View style={styles.examTitleRow}>
+                        <Text style={styles.examName}>{exam.exam_name}</Text>
+                        <View style={[styles.examTypeBadge, { backgroundColor: exam.examTypeColor + '20' }]}>
+                          <Text style={[styles.examTypeText, { color: exam.examTypeColor }]}>
+                            {exam.examType}
+                          </Text>
                         </View>
                       </View>
+                      <Text style={styles.examDate}>
+                        {new Date(exam.exam_date).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </Text>
                     </View>
-                  ))}
-                </View>
+                    <View style={[styles.examRank, { backgroundColor: rankData.bg }]}>
+                      <Text style={styles.examRankMascot}>{getRankMascot(exam.rank)}</Text>
+                      <Icon name={getRankIcon(exam.rank)} size={16} color={rankData.color} />
+                      <Text style={[styles.examRankText, { color: rankData.color }]}>#{exam.rank}</Text>
+                    </View>
+                  </View>
+                  
+                  <View style={styles.examScores}>
+                    <View style={styles.scoreItem}>
+                      <Text style={styles.scoreLabel}>Physics</Text>
+                      <Text style={[styles.scoreValue, { color: colors.physics }]}>{exam.phy}</Text>
+                    </View>
+                    <View style={styles.scoreItem}>
+                      <Text style={styles.scoreLabel}>Chemistry</Text>
+                      <Text style={[styles.scoreValue, { color: colors.chemistry }]}>{exam.chem}</Text>
+                    </View>
+                    <View style={styles.scoreItem}>
+                      <Text style={styles.scoreLabel}>Mathematics</Text>
+                      <Text style={[styles.scoreValue, { color: colors.mathematics }]}>{exam.math}</Text>
+                    </View>
+                  </View>
+                  
+                  <View style={styles.examTotal}>
+                    <Text style={styles.totalLabel}>Total Score</Text>
+                    <Text style={styles.totalValue}>{exam.total} / 300</Text>
+                    <Text style={[styles.totalPercentage, { color: performance.color }]}>
+                      {percentage.toFixed(1)}%
+                    </Text>
+                  </View>
+                  
+                  {renderGlowEffect(styles.cardGlow)}
+                </LinearGradient>
+              </Animated.View>
+            );
+          })}
+        </View>
+      </Animated.View>
+    );
+  };
 
-                <TouchableOpacity 
-                  style={styles.viewDetailsButton}
-                  onPress={() => Alert.alert('Details', `Detailed view for ${term.term}`)}
-                >
-                  <Text style={styles.viewDetailsText}>View Detailed Report</Text>
-                  <Icon name="arrow-forward" size={16} color={theme.colors.primary} />
-                </TouchableOpacity>
-              </View>
-            ))}
+  const renderEmptyState = () => (
+    <Animated.View 
+      style={[
+        styles.emptyContainer,
+        {
+          opacity: animations.fadeAnim,
+          transform: [{ translateY: animations.slideAnim }]
+        }
+      ]}
+    >
+      <LinearGradient
+        colors={[colors.primary, colors.primaryLight]}
+        style={styles.emptyIcon}
+      >
+        <Icon name="assignment" size={48} color={colors.white} />
+        <Text style={styles.emptyIconMascot}>📋</Text>
+      </LinearGradient>
+      <Text style={styles.emptyTitle}>Results Coming Soon! 🎯</Text>
+      <Text style={styles.emptyText}>
+        Your exam results haven't been published yet. Once your results are available, they'll appear here with all the exciting details! {getCheerfulCharacter()}
+      </Text>
+      <Text style={styles.emptySubtext}>
+        Keep studying hard! 📚✨ Great things are coming your way! 🌈
+      </Text>
+      
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.motivationButton} onPress={onRefresh}>
+          <LinearGradient
+            colors={[colors.success, colors.chemistry]}
+            style={styles.motivationGradient}
+          >
+            <Icon name="refresh" size={20} color={colors.white} />
+            <Text style={styles.motivationText}>Check Again 🔄</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+        
+        {/* Development/Demo button - only show in development */}
+        {__DEV__ && (
+          <>
+            <TouchableOpacity 
+              style={styles.demoButton} 
+              onPress={() => {
+                console.log("🎭 Loading demo data...");
+                updateState({ resultsData: DEMO_RESULTS, loading: false, error: null });
+              }}
+            >
+              <LinearGradient
+                colors={[colors.purple, colors.purpleLight]}
+                style={styles.motivationGradient}
+              >
+                <Icon name="visibility" size={20} color={colors.white} />
+                <Text style={styles.motivationText}>View Demo Results 🎭</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.testApiButton} 
+              onPress={async () => {
+                console.log("🧪 Testing API with different approaches...");
+                updateState({ loading: true });
+                await loadResultsData();
+              }}
+            >
+              <LinearGradient
+                colors={[colors.cyan, colors.cyanLight]}
+                style={styles.motivationGradient}
+              >
+                <Icon name="api" size={20} color={colors.white} />
+                <Text style={styles.motivationText}>Test API Call 🧪</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.testDirectButton} 
+              onPress={async () => {
+                console.log("🎯 Testing direct API call without auth...");
+                try {
+                  const directUrl = 'https://erpbackend-gray.vercel.app/api/exams/getStudentResults';
+                  console.log("📞 Direct call to:", directUrl);
+                  
+                  const response = await fetch(directUrl, {
+                    method: 'GET',
+                    headers: {
+                      'Accept': 'application/json',
+                      'Content-Type': 'application/json',
+                    },
+                  });
+                  
+                  console.log("📡 Direct response status:", response.status);
+                  console.log("📡 Direct response headers:", Object.fromEntries(response.headers.entries()));
+                  console.log("📡 Direct response content-type:", response.headers.get('content-type'));
+                  
+                  const responseText = await response.text();
+                  console.log("📄 Direct response body:", responseText);
+                  
+                  if (response.headers.get('content-type')?.includes('application/json')) {
+                    try {
+                      const jsonData = JSON.parse(responseText);
+                      console.log("📊 Direct JSON data:", jsonData);
+                    } catch (parseError) {
+                      console.log("❌ Could not parse as JSON:", parseError.message);
+                    }
+                  }
+                } catch (error) {
+                  console.log("❌ Direct API call error:", error.message);
+                }
+              }}
+            >
+              <LinearGradient
+                colors={[colors.gold, colors.goldLight]}
+                style={styles.motivationGradient}
+              >
+                <Icon name="bug-report" size={20} color={colors.white} />
+                <Text style={styles.motivationText}>Test Direct Call 🔧</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </>
         )}
       </View>
-    );
-  };
+    </Animated.View>
+  );
+
+  // Main Render
+  if (state.loading) {
+    console.log("🔄 Still loading...");
+    return renderLoadingScreen();
+  }
+
+  console.log("🔍 Checking results data...");
+  console.log("📊 Current state.resultsData:", state.resultsData);
+  console.log("📊 Current state.error:", state.error);
+  
+  const hasResults = hasAnyResults();
+  const allResults = getAllResults();
+  const latestResult = getLatestResult();
+    
+  console.log("📊 hasResults:", hasResults);
+  console.log("📊 All results count:", allResults.length);
+  console.log("📊 Latest result:", latestResult);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Header title="Academic Results" />
+    <LinearGradient
+      colors={[colors.background, colors.gray50]}
+      style={styles.container}
+    >
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+      <Header title="Results" />
       
-      {/* Tab Navigation */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tabButton, activeTab === "current" && styles.activeTab]}
-          onPress={() => setActiveTab("current")}
-        >
-          <Icon 
-            name="assignment" 
-            size={20} 
-            color={activeTab === "current" ? theme.colors.primary : theme.colors.textLight} 
-          />
-          <Text style={[
-            styles.tabText, 
-            activeTab === "current" && styles.activeTabText
-          ]}>
-            Current Term
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={[styles.tabButton, activeTab === "previous" && styles.activeTab]}
-          onPress={() => setActiveTab("previous")}
-        >
-          <Icon 
-            name="history" 
-            size={20} 
-            color={activeTab === "previous" ? theme.colors.primary : theme.colors.textLight} 
-          />
-          <Text style={[
-            styles.tabText, 
-            activeTab === "previous" && styles.activeTabText
-          ]}>
-            Previous Results
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+      {renderSparkleEffects()}
+      
+      <ScrollView 
+        style={styles.scrollView} 
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl 
-            refreshing={refreshing} 
+            refreshing={state.refreshing} 
             onRefresh={onRefresh}
-            colors={[theme.colors.primary]}
-            tintColor={theme.colors.primary}
+            colors={[colors.primary, colors.chemistry, colors.physics]}
+            tintColor={colors.primary}
+            progressBackgroundColor={colors.white}
           />
         }
-        showsVerticalScrollIndicator={false}
       >
-        {activeTab === "current" ? renderCurrentResults() : renderPreviousResults()}
+        {/* Debug info - hidden from UI but available in console logs */}
+        {false && __DEV__ && (
+          <View style={styles.debugContainer}>
+            <Text style={styles.debugText}>
+              🔍 Debug Info: {'\n'}
+              Loading: {state.loading ? 'Yes' : 'No'}{'\n'}
+              Error: {state.error || 'None'}{'\n'}
+              Has Results Data: {state.resultsData ? 'Yes' : 'No'}{'\n'}
+              CET Count: {state.resultsData?.cet?.length || 0}{'\n'}
+              NEET Count: {state.resultsData?.neet?.length || 0}{'\n'}
+              JEE Main Count: {state.resultsData?.jee_main?.length || 0}{'\n'}
+              JEE Adv Count: {state.resultsData?.jee_adv?.length || 0}{'\n'}
+              Total Results: {allResults.length}{'\n'}
+              Has Results: {hasResults ? 'Yes' : 'No'}{'\n'}
+              {'\n'}
+              🔧 API Issue Analysis:{'\n'}
+              • Getting HTML instead of JSON{'\n'}
+              • Suggests endpoint routing problem{'\n'}
+              • Try "Test Direct Call" below{'\n'}
+              {'\n'}
+              💡 Possible Solutions:{'\n'}
+              1. Check if API is deployed correctly{'\n'}
+              2. Verify endpoint exists on server{'\n'}
+              3. Test without authentication first{'\n'}
+              4. Check for CORS issues{'\n'}
+              5. Verify user_id 253 exists in DB
+            </Text>
+          </View>
+        )}
+        
+        {renderErrorMessage()}
+        
+        {hasResults ? (
+          <>
+            {/* Celebration banner for top performers */}
+            {latestResult?.rank <= 3 && (
+              <Animated.View
+                style={[
+                  styles.celebrationBanner,
+                  {
+                    opacity: animations.fadeAnim,
+                    transform: [{ scale: animations.bounce }]
+                  }
+                ]}
+              >
+                <LinearGradient
+                  colors={[colors.gold, colors.goldLight]}
+                  style={styles.celebrationGradient}
+                >
+                  <Text style={styles.celebrationText}>
+                    🎊 CONGRATULATIONS! 🎊
+                  </Text>
+                </LinearGradient>
+              </Animated.View>
+            )}
+            
+            {renderOverallStats()}
+            {renderSubjectProgress()}
+            {renderExamHistory()}
+          </>
+        ) : (
+          renderEmptyState()
+        )}
+        
+        <View style={styles.bottomSpacing} />
       </ScrollView>
-    </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  
-  // Tab Navigation
-  tabContainer: {
-    flexDirection: "row",
-    backgroundColor: theme.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  tabButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.md,
-  },
-  activeTab: {
-    borderBottomWidth: 3,
-    borderBottomColor: theme.colors.primary,
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: theme.colors.textLight,
-    marginLeft: theme.spacing.sm,
-  },
-  activeTabText: {
-    color: theme.colors.primary,
-    fontWeight: '600',
+    paddingTop: spacing.lg,
   },
 
-  // Scroll View
   scrollView: {
     flex: 1,
-  },
-  scrollContent: {
-    padding: theme.spacing.lg,
-  },
-  tabContent: {
-    flex: 1,
+    paddingTop: spacing.sm,
   },
 
-  // No Results Card
-  noResultsCard: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.xxl,
-    alignItems: 'center',
-    marginBottom: theme.spacing.xl,
-    ...theme.shadows.card,
+  // Sparkle Effects
+  sparkleContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1,
+    pointerEvents: 'none',
   },
-  noResultsIcon: {
+  sparkle: {
+    position: 'absolute',
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // Loading Screen
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xxxl,
+    paddingTop: spacing.xxxxl,
+  },
+  loadingCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 24,
+    padding: spacing.xxxl,
+    alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.primary,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.15,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+    borderWidth: 1,
+    borderColor: colors.gray200,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  loadingMascot: {
+    marginBottom: spacing.md,
+  },
+  loadingMascotText: {
+    fontSize: 32,
+    textAlign: 'center',
+  },
+  trendingLoader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  loadingDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginHorizontal: 4,
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+
+  // Error State
+  errorContainer: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  errorCard: {
+    borderRadius: 20,
+    padding: spacing.xl,
+    alignItems: 'center',
+  },
+  errorIcon: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: theme.colors.borderLight,
-    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
-    marginBottom: theme.spacing.lg,
-  },
-  noResultsTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.sm,
-  },
-  noResultsMessage: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: theme.spacing.lg,
-  },
-  refreshButton: {
-    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.blue50,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.md,
+    marginBottom: spacing.lg,
   },
-  refreshButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.colors.primary,
-    marginLeft: theme.spacing.sm,
-  },
-
-  // Demo Section
-  demoSection: {
-    opacity: 0.7,
-  },
-  demoTitle: {
+  errorText: {
+    color: colors.white,
     fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    fontWeight: '500',
+    textAlign: 'center',
+    marginBottom: spacing.lg,
   },
-  demoSubtitle: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.lg,
-  },
-
-  // Overview Card
-  overviewCard: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
-    ...theme.shadows.card,
-  },
-  overviewHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.lg,
-  },
-  termTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: theme.colors.text,
-    marginBottom: 2,
-  },
-  examDate: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-  },
-  statusBadge: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.md,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-
-  // Stats Grid
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.md,
-  },
-  statCard: {
-    flex: 1,
-    minWidth: (width - theme.spacing.lg * 2 - theme.spacing.lg - theme.spacing.md) / 2,
-    backgroundColor: theme.colors.borderLight,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: theme.colors.text,
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.sm,
-  },
-  rankSubtext: {
-    fontSize: 10,
-    color: theme.colors.textLight,
-    marginTop: 2,
-  },
-  performanceText: {
-    fontSize: 10,
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  gradeIndicator: {
-    width: 20,
-    height: 4,
-    borderRadius: 2,
-    marginTop: theme.spacing.sm,
-  },
-
-  // Progress Bar
-  progressBarContainer: {
-    width: '100%',
-    height: 4,
-    backgroundColor: theme.colors.border,
-    borderRadius: 2,
-    marginTop: theme.spacing.sm,
+  retryButton: {
+    borderRadius: 12,
     overflow: 'hidden',
   },
-  progressBar: {
-    height: '100%',
-    borderRadius: 2,
+  retryGradient: {
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+  },
+  retryText: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: '600',
   },
 
-  // Section Title
-  sectionTitle: {
+  // Stats Container
+  celebrationBanner: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+    borderRadius: 16,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.gold,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
+  },
+  celebrationGradient: {
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    alignItems: 'center',
+  },
+  celebrationText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.white,
+    letterSpacing: 1,
+    textAlign: 'center',
+  },
+  
+  statsContainer: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.xxxl,
+  },
+  statsCard: {
+    borderRadius: 24,
+    padding: spacing.xl,
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.primary,
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.2,
+        shadowRadius: 20,
+      },
+      android: {
+        elevation: 12,
+      },
+    }),
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  statsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  headerIconContainer: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerMascot: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    fontSize: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 10,
+    paddingHorizontal: 2,
+  },
+  statsTitleContainer: {
+    marginLeft: spacing.md,
+  },
+  statsTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: colors.white,
+  },
+  examTypeLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginTop: 2,
+  },
+  statsContent: {
+    alignItems: 'center',
+  },
+  congratulationsContainer: {
+    backgroundColor: 'rgba(255, 215, 0, 0.2)',
+    borderRadius: 16,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.gold,
+  },
+  congratulationsText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.gold,
+    textAlign: 'center',
+    letterSpacing: 0.5,
+  },
+  totalScoreContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: spacing.sm,
+  },
+  totalScore: {
+    fontSize: 48,
+    fontWeight: '900',
+    color: colors.white,
+    letterSpacing: -2,
+  },
+  totalOutOf: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginLeft: spacing.xs,
+  },
+  scoreMascot: {
+    fontSize: 24,
+    marginLeft: spacing.sm,
+  },
+  percentage: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: colors.gold,
+    marginBottom: spacing.md,
+  },
+  performanceContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 20,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  performanceText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.white,
+  },
+  rankContainer: {
+    marginTop: spacing.md,
+  },
+  rankBadge: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  rankBadgeGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    gap: spacing.sm,
+  },
+  rankText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.white,
+  },
+  examInfoContainer: {
+    marginTop: spacing.lg,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 12,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+  },
+  examNameDisplay: {
     fontSize: 16,
     fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.lg,
-    marginTop: theme.spacing.sm,
+    color: colors.white,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  examDateDisplay: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'center',
   },
 
-  // Subject Cards
+  // Sections
+  section: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.xxxl,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  sectionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.textMuted,
+    marginLeft: spacing.sm,
+  },
+
+  // Subject Progress
+  subjectsContainer: {
+    gap: spacing.lg,
+  },
   subjectCard: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
-    ...theme.shadows.card,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  subjectCardGradient: {
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.gray200,
+    position: 'relative',
+    overflow: 'hidden',
   },
   subjectHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.lg,
+  },
+  subjectIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
   },
   subjectInfo: {
     flex: 1,
   },
-  subjectName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.text,
+  subjectTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 2,
   },
-  teacherName: {
-    fontSize: 12,
-    color: theme.colors.textLight,
-  },
-  subjectStats: {
-    alignItems: 'flex-end',
-  },
-  marksContainer: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: theme.spacing.xs,
-  },
-  marksText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: theme.colors.text,
-  },
-  totalMarksText: {
-    fontSize: 14,
-    color: theme.colors.textLight,
-  },
-  gradeBadge: {
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 4,
-    borderRadius: theme.borderRadius.sm,
-  },
-  gradeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: theme.colors.white,
-  },
-
-  subjectDetails: {
-    gap: theme.spacing.sm,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.lg,
-  },
-  detailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  detailText: {
-    fontSize: 12,
-    color: theme.colors.textSecondary,
-    marginLeft: 4,
-    fontWeight: '500',
-  },
-  remarksContainer: {
-    flexDirection: 'row',
-    backgroundColor: theme.colors.borderLight,
-    padding: theme.spacing.sm,
-    borderRadius: theme.borderRadius.sm,
-    marginTop: theme.spacing.sm,
-  },
-  remarksText: {
-    fontSize: 12,
-    color: theme.colors.textSecondary,
-    flex: 1,
-    marginLeft: theme.spacing.sm,
-    lineHeight: 16,
-    fontStyle: 'italic',
-  },
-
-  // Previous Results
-  termCard: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
-    ...theme.shadows.card,
-  },
-  termHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.lg,
-  },
-  termStats: {
-    alignItems: 'flex-end',
-  },
-  termPercentage: {
+  subjectName: {
     fontSize: 18,
     fontWeight: '700',
-    color: theme.colors.text,
-  },
-  termRank: {
-    fontSize: 12,
-    color: theme.colors.textSecondary,
-    marginTop: 2,
-  },
-
-  subjectsList: {
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.lg,
-  },
-  subjectRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.borderLight,
-  },
-  subjectRowName: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: theme.colors.text,
+    color: colors.textPrimary,
     flex: 1,
   },
-  subjectRowRight: {
+  subjectMascot: {
+    fontSize: 16,
+    marginLeft: spacing.sm,
+  },
+  subjectScore: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textMuted,
+  },
+  progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.sm,
+    gap: spacing.md,
   },
-  subjectRowMarks: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-    fontWeight: '500',
+  progressTrack: {
+    flex: 1,
+    height: 8,
+    backgroundColor: colors.gray200,
+    borderRadius: 4,
+    overflow: 'hidden',
   },
-  miniGradeBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+  progressBar: {
+    height: '100%',
     borderRadius: 4,
   },
-  miniGradeText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: theme.colors.white,
+  progressText: {
+    fontSize: 16,
+    fontWeight: '700',
+    minWidth: 45,
   },
 
-  viewDetailsButton: {
+  // Exam History
+  historyContainer: {
+    gap: spacing.lg,
+  },
+  examCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  examCardGradient: {
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.gray200,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  examHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: spacing.lg,
+  },
+  examInfo: {
+    flex: 1,
+  },
+  examTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.blue50,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.sm,
+    marginBottom: 4,
+    gap: spacing.sm,
   },
-  viewDetailsText: {
+  examName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    flex: 1,
+  },
+  examTypeBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  examTypeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  examDate: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.textMuted,
+  },
+  examRank: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: 12,
+    gap: spacing.xs,
+  },
+  examRankMascot: {
     fontSize: 14,
+  },
+  examRankText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  examScores: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: spacing.lg,
+  },
+  scoreItem: {
+    alignItems: 'center',
+  },
+  scoreLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.textMuted,
+    marginBottom: 4,
+  },
+  scoreValue: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  examTotal: {
+    alignItems: 'center',
+    paddingTop: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray200,
+  },
+  totalLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.textMuted,
+    marginBottom: 4,
+  },
+  totalValue: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: colors.textPrimary,
+    marginBottom: 4,
+  },
+  totalPercentage: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+
+  // Empty State
+  emptyContainer: {
+    alignItems: 'center',
+    padding: spacing.xxxl,
+    marginTop: spacing.xxxxl,
+  },
+  emptyIcon: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+    position: 'relative',
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.primary,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.2,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  emptyIconMascot: {
+    position: 'absolute',
+    bottom: -5,
+    right: -5,
+    fontSize: 20,
+    backgroundColor: colors.white,
+    borderRadius: 15,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  emptyTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: colors.textPrimary,
+    marginBottom: spacing.md,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: spacing.lg,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: colors.textLight,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: spacing.xxxl,
+    fontStyle: 'italic',
+  },
+  buttonContainer: {
+    width: '100%',
+    gap: spacing.md,
+    alignItems: 'center',
+  },
+  motivationButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  demoButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    opacity: 0.9,
+  },
+  testApiButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    opacity: 0.9,
+  },
+  testDirectButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    opacity: 0.9,
+  },
+  motivationGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    gap: spacing.sm,
+  },
+  motivationText: {
+    fontSize: 16,
     fontWeight: '600',
-    color: theme.colors.primary,
-    marginRight: theme.spacing.sm,
+    color: colors.white,
+  },
+
+  // Debug Info (development only)
+  debugContainer: {
+    margin: spacing.lg,
+    padding: spacing.md,
+    backgroundColor: colors.gray100,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.gray300,
+  },
+  debugText: {
+    fontSize: 12,
+    color: colors.gray700,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+  },
+
+  // Fixed: Add missing styles for glow and shimmer effects
+  glowOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: colors.gold,
+    borderRadius: 16,
+  },
+  cardGlow: {
+    borderRadius: 24,
+  },
+
+  // Shimmer Effects
+  shimmerOverlay: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: '30%',
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    opacity: 0.6,
+  },
+  cardShimmer: {
+    left: 0,
+    right: 0,
+  },
+  loadingShimmer: {
+    left: 0,
+    right: 0,
+    borderRadius: 24,
+  },
+
+  // Bottom spacing
+  bottomSpacing: {
+    height: spacing.xxxxl + spacing.xxxl,
   },
 });
 
-export default StudentResultScreen;
+export default StudentResultsScreen;
