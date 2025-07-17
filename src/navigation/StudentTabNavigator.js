@@ -1,56 +1,8 @@
-// import React from "react";
-// import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-// import Icon from "react-native-vector-icons/MaterialIcons";
-
-// // Import Student Screens
-// import StudentHomeScreen from "../screens/student/StudentHomeScreen";
-// import StudentFeeScreen from "../screens/student/StudentFeeScreen";
-// import StudentResultScreen from "../screens/student/StudentResultScreen";
-// import StudentProfileScreen from "../screens/student/StudentProfileScreen";
-
-// // Import colors
-// import { colors } from "../styles/colors";
-
-// const Tab = createBottomTabNavigator();
-
-// const StudentTabNavigator = () => {
-//   return (
-//     <Tab.Navigator
-//       screenOptions={({ route }) => ({
-//         tabBarIcon: ({ focused, color, size }) => {
-//           let iconName;
-
-//           if (route.name === "Home") {
-//             iconName = "home";
-//           } else if (route.name === "Fee") {
-//             iconName = "payments";
-//           } else if (route.name === "Results") {
-//             iconName = "assessment";
-//           } else if (route.name === "Profile") {
-//             iconName = "account-circle";
-//           }
-
-//           return <Icon name={iconName} size={size} color={color} />;
-//         },
-//         tabBarActiveTintColor: colors.primary,
-//         tabBarInactiveTintColor: "gray",
-//         headerShown: false,
-//       })}
-//     >
-//       <Tab.Screen name="Home" component={StudentHomeScreen} />
-//       <Tab.Screen name="Fee" component={StudentFeeScreen} />
-//       <Tab.Screen name="Results" component={StudentResultScreen} />
-//       <Tab.Screen name="Profile" component={StudentProfileScreen} />
-//     </Tab.Navigator>
-//   );
-// };
-
-// export default StudentTabNavigator;
-////////////////////////////////////////////////////// NEW NAVIGATOR ///////////////////////////////////////////////////////
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { View, Text, Animated, Platform } from "react-native";
+import { View, Text, Animated, Platform, Dimensions } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Import Student Screens
 import StudentHomeScreen from "../screens/student/StudentHomeScreen";
@@ -62,120 +14,243 @@ import StudentProfileScreen from "../screens/student/StudentProfileScreen";
 import { colors } from "../styles/colors";
 
 const Tab = createBottomTabNavigator();
+const { width: screenWidth } = Dimensions.get('window');
 
-// Animated Tab Icon Component
-const AnimatedTabIcon = ({ focused, iconName, size, label }) => {
+// iPhone-style Floating Tab Component
+const FloatingTab = ({ focused, iconName, label, index }) => {
   const scaleValue = React.useRef(new Animated.Value(1)).current;
-  const translateY = React.useRef(new Animated.Value(0)).current;
-  const opacityValue = React.useRef(new Animated.Value(0.7)).current;
+  const iconScale = React.useRef(new Animated.Value(1)).current;
+  const labelOpacity = React.useRef(new Animated.Value(focused ? 1 : 0.7)).current;
+  const backgroundOpacity = React.useRef(new Animated.Value(focused ? 1 : 0)).current;
+  const jumpValue = React.useRef(new Animated.Value(0)).current;
 
-  React.useEffect(() => {
-    Animated.parallel([
-      Animated.spring(scaleValue, {
-        toValue: focused ? 1.2 : 1,
-        tension: 300,
-        friction: 10,
+  const triggerJumpAnimation = () => {
+    jumpValue.setValue(0);
+    Animated.sequence([
+      Animated.timing(jumpValue, {
+        toValue: -8,
+        duration: 100,
         useNativeDriver: true,
       }),
-      Animated.spring(translateY, {
-        toValue: focused ? -5 : 0,
+      Animated.spring(jumpValue, {
+        toValue: -2,
         tension: 300,
-        friction: 10,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacityValue, {
-        toValue: focused ? 1 : 0.6,
-        duration: 200,
+        friction: 6,
         useNativeDriver: true,
       }),
     ]).start();
+  };
+
+  React.useEffect(() => {
+    if (focused) {
+      // Trigger jump animation
+      triggerJumpAnimation();
+      
+      // Other animations for focused state
+      Animated.parallel([
+        Animated.spring(scaleValue, {
+          toValue: 1.1,
+          tension: 400,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+        Animated.spring(iconScale, {
+          toValue: 1.2,
+          tension: 300,
+          friction: 6,
+          useNativeDriver: true,
+        }),
+        Animated.timing(labelOpacity, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(backgroundOpacity, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      // Return to normal state
+      Animated.parallel([
+        Animated.spring(scaleValue, {
+          toValue: 1,
+          tension: 400,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+        Animated.spring(jumpValue, {
+          toValue: 0,
+          tension: 350,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+        Animated.spring(iconScale, {
+          toValue: 1,
+          tension: 300,
+          friction: 6,
+          useNativeDriver: true,
+        }),
+        Animated.timing(labelOpacity, {
+          toValue: 0.7,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(backgroundOpacity, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
   }, [focused]);
 
   return (
-    <View style={{ alignItems: "center", justifyContent: "center", flex: 1 }}>
+    <View style={{
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 8,
+      position: 'relative',
+    }}>
+      {/* Active Background Circle */}
+      <Animated.View
+        style={{
+          position: 'absolute',
+          width: 50,
+          height: 50,
+          borderRadius: 25,
+          backgroundColor: "rgba(255, 255, 255, 0.15)",
+          opacity: backgroundOpacity,
+          transform: [{ scale: scaleValue }],
+        }}
+      />
+      
       <Animated.View
         style={{
           transform: [
             { scale: scaleValue },
-            { translateY: translateY }
+            { translateY: jumpValue }
           ],
-          opacity: opacityValue,
           alignItems: "center",
+          zIndex: 1,
         }}
       >
-        {/* Icon Background */}
-        <View
+        {/* Icon with Micro-interaction */}
+        <Animated.View
           style={{
-            width: 50,
-            height: 50,
-            borderRadius: 25,
-            backgroundColor: focused ? (colors.primary || "#3B82F6") : "transparent",
-            justifyContent: "center",
-            alignItems: "center",
-            shadowColor: focused ? (colors.primary || "#3B82F6") : "transparent",
-            shadowOffset: {
-              width: 0,
-              height: 4,
-            },
-            shadowOpacity: focused ? 0.3 : 0,
-            shadowRadius: 8,
-            elevation: focused ? 8 : 0,
-            borderWidth: focused ? 0 : 1.5,
-            borderColor: focused ? "transparent" : "rgba(59, 130, 246, 0.2)",
+            transform: [{ scale: iconScale }],
+            marginBottom: 2,
           }}
         >
           <Icon
             name={iconName}
-            size={size}
-            color={focused ? "#FFFFFF" : (colors.primary || "#3B82F6")}
+            size={22}
+            color={focused ? "#FFFFFF" : "rgba(255, 255, 255, 0.6)"}
           />
-        </View>
+        </Animated.View>
         
-        {/* Label */}
-        <Text
+        {/* Animated Label */}
+        <Animated.Text
           style={{
-            fontSize: 11,
-            fontWeight: focused ? "600" : "500",
-            color: focused ? (colors.primary || "#3B82F6") : "#64748B",
-            marginTop: 6,
-            textAlign: "center",
+            fontSize: 9,
+            fontWeight: focused ? "700" : "500",
+            color: focused ? "#FFFFFF" : "rgba(255, 255, 255, 0.6)",
+            opacity: labelOpacity,
+            letterSpacing: 0.2,
           }}
         >
           {label}
-        </Text>
+        </Animated.Text>
       </Animated.View>
     </View>
   );
 };
 
+// Floating Container Background
+const FloatingBackground = ({ insets }) => {
+  const backgroundScale = React.useRef(new Animated.Value(0.95)).current;
+
+  React.useEffect(() => {
+    Animated.spring(backgroundScale, {
+      toValue: 1,
+      tension: 200,
+      friction: 8,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  return (
+    <Animated.View
+      style={{
+        flex: 1,
+        transform: [{ scale: backgroundScale }],
+        backgroundColor: "rgba(0, 0, 0, 0.85)",
+        borderRadius: 28,
+        ...Platform.select({
+          ios: {
+            shadowColor: "#000000",
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.3,
+            shadowRadius: 20,
+          },
+          android: {
+            elevation: 15,
+          },
+        }),
+        // Glassmorphism effect
+        borderWidth: 1,
+        borderColor: "rgba(255, 255, 255, 0.1)",
+      }}
+    >
+      {/* Subtle gradient overlay for depth */}
+      <View
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "50%",
+          backgroundColor: "rgba(255, 255, 255, 0.05)",
+          borderTopLeftRadius: 28,
+          borderTopRightRadius: 28,
+        }}
+      />
+    </Animated.View>
+  );
+};
+
 const StudentTabNavigator = () => {
+  const insets = useSafeAreaInsets();
+  const [activeTabIndex, setActiveTabIndex] = React.useState(0);
+
+  const tabConfig = [
+    { name: "Home", iconName: "home", label: "Home" },
+    { name: "Fee", iconName: "payments", label: "Fees" },
+    { name: "Results", iconName: "assessment", label: "Results" },
+    { name: "Profile", iconName: "account-circle", label: "Profile" },
+  ];
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, size }) => {
-          let iconName;
-          let label;
-
-          if (route.name === "Home") {
-            iconName = "home";
-            label = "Home";
-          } else if (route.name === "Fee") {
-            iconName = "payments";
-            label = "Fees";
-          } else if (route.name === "Results") {
-            iconName = "assessment";
-            label = "Results";
-          } else if (route.name === "Profile") {
-            iconName = "account-circle";
-            label = "Profile";
-          }
+        tabBarIcon: ({ focused }) => {
+          const tabIndex = tabConfig.findIndex(tab => tab.name === route.name);
+          const config = tabConfig[tabIndex];
+          
+          React.useEffect(() => {
+            if (focused) {
+              setActiveTabIndex(tabIndex);
+            }
+          }, [focused, tabIndex]);
 
           return (
-            <AnimatedTabIcon
+            <FloatingTab
               focused={focused}
-              iconName={iconName}
-              size={24}
-              label={label}
+              iconName={config.iconName}
+              label={config.label}
+              index={tabIndex}
             />
           );
         },
@@ -183,41 +258,26 @@ const StudentTabNavigator = () => {
         headerShown: false,
         tabBarStyle: {
           position: "absolute",
-          bottom: 10,
-          left: 0,
-          right: 0,
-          height: Platform.OS === 'ios' ? 90 : 75,
-          backgroundColor: "#FFFFFFF1",
-          borderTopLeftRadius: 25,
-          borderTopRightRadius: 25,
-          paddingTop: 10,
-          paddingBottom: Platform.OS === 'ios' ? 25 : 10,
-          paddingHorizontal: 15,
-          shadowColor: "#000000",
-          shadowOffset: {
-            width: 0,
-            height: -5,
-          },
-          shadowOpacity: 0.1,
-          shadowRadius: 15,
-          elevation: 20,
-          borderTopWidth: 1,
-          borderTopColor: "rgba(59, 130, 246, 0.1)",
+          bottom: Platform.OS === 'ios' ? insets.bottom + 20 : 20,
+          left: 20,
+          right: 20,
+          height: 65,
+          backgroundColor: "transparent",
+          borderTopWidth: 0,
+          paddingTop: 8,
+          paddingBottom: 8,
+          paddingHorizontal: 12,
+          borderRadius: 28,
+          marginHorizontal: 0,
         },
         tabBarBackground: () => (
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: "#FFFFFF",
-              borderTopLeftRadius: 0,
-              borderTopRightRadius: 0,
-              borderTopWidth: 3,
-              borderTopColor: colors.primary || "#3B82F6",
-            }}
-          />
+          <FloatingBackground insets={insets} />
         ),
         tabBarItemStyle: {
-          paddingVertical: 5,
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: 20,
         },
       })}
     >
@@ -225,28 +285,28 @@ const StudentTabNavigator = () => {
         name="Home" 
         component={StudentHomeScreen}
         options={{
-          tabBarLabel: "Home"
+          tabBarAccessibilityLabel: "Home",
         }}
       />
       <Tab.Screen 
         name="Fee" 
         component={StudentFeeScreen}
         options={{
-          tabBarLabel: "Fees"
+          tabBarAccessibilityLabel: "Fees",
         }}
       />
       <Tab.Screen 
         name="Results" 
         component={StudentResultScreen}
         options={{
-          tabBarLabel: "Results"
+          tabBarAccessibilityLabel: "Results",
         }}
       />
       <Tab.Screen 
         name="Profile" 
         component={StudentProfileScreen}
         options={{
-          tabBarLabel: "Profile"
+          tabBarAccessibilityLabel: "Profile",
         }}
       />
     </Tab.Navigator>

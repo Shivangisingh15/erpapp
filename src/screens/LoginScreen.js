@@ -19,7 +19,9 @@ import { jwtDecode } from "jwt-decode";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { REACT_APP_API_BASE_URL } from "@env";
+const REACT_APP_API_BASE_URL = 'https://erpbackend-gray.vercel.app';
+ //import { REACT_APP_API_BASE_URL } from "@env"; // uncomment this line if using dotenv for environment variable management
+//import { API_BASE_URL } from "../config/config";// adjust this import based on your project
 
 // Using fetch instead of axios for API calls
 import ResponseModal from "../components/ResponseModal";
