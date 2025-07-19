@@ -17,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 
 const { width, height } = Dimensions.get('window');
+const API_BASE_URL = 'https://erpbackend-gray.vercel.app/api/general';
 
 // Modern Dribbble-inspired Design System
 const theme = {
@@ -106,21 +107,21 @@ const theme = {
   
   shadows: {
     glass: {
-      shadowColor: theme?.colors?.shadow || 'rgba(15, 23, 42, 0.08)',
+      shadowColor: 'rgba(15, 23, 42, 0.08)',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 1,
       shadowRadius: 16,
       elevation: 4,
     },
     soft: {
-      shadowColor: theme?.colors?.shadow || 'rgba(15, 23, 42, 0.08)',
+      shadowColor: 'rgba(15, 23, 42, 0.08)',
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 1,
       shadowRadius: 8,
       elevation: 2,
     },
     medium: {
-      shadowColor: theme?.colors?.shadowLarge || 'rgba(15, 23, 42, 0.15)',
+      shadowColor: 'rgba(15, 23, 42, 0.15)',
       shadowOffset: { width: 0, height: 8 },
       shadowOpacity: 1,
       shadowRadius: 24,
@@ -140,11 +141,26 @@ const ModernFeeScreen = () => {
     paymentInProgress: null,
   });
 
-  // Animation References
+  // Animation References - all at top level
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
   const scrollY = useRef(new Animated.Value(0)).current;
+
+  // Loading screen animations - all at top level
+  const loadingPulseAnim = useRef(new Animated.Value(1)).current;
+  const loadingRotateAnim = useRef(new Animated.Value(0)).current;
+  const loadingFloatAnim = useRef(new Animated.Value(0)).current;
+  const loadingShimmerAnim = useRef(new Animated.Value(0)).current;
+  const loadingDotsAnim = useRef(new Animated.Value(0)).current;
+  const loadingProgressAnim = useRef(new Animated.Value(0)).current;
+
+  const [routes] = useState([
+    { key: 'cet', title: 'CET', icon: 'school-outline', color: '#6366F1' },
+    { key: 'neet', title: 'NEET', icon: 'medical-outline', color: '#10B981' },
+    { key: 'jee_main', title: 'JEE Main', icon: 'calculator-outline', color: '#F59E0B' },
+    { key: 'jee_adv', title: 'JEE Adv', icon: 'rocket-outline', color: '#EF4444' },
+  ]);
 
   const updateState = useCallback((updates) => {
     setState(prev => ({ ...prev, ...updates }));
@@ -157,6 +173,12 @@ const ModernFeeScreen = () => {
   useEffect(() => {
     if (!state.loading) {
       startAnimations();
+    }
+  }, [state.loading]);
+
+  useEffect(() => {
+    if (state.loading) {
+      startLoadingAnimations();
     }
   }, [state.loading]);
 
@@ -185,88 +207,252 @@ const ModernFeeScreen = () => {
     }, 400);
   };
 
+  const startLoadingAnimations = () => {
+    // Main pulse animation
+    const pulseLoop = () => {
+      Animated.sequence([
+        Animated.timing(loadingPulseAnim, {
+          toValue: 1.2,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(loadingPulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ]).start(pulseLoop);
+    };
+
+    // Rotation animation for outer ring
+    const rotateLoop = () => {
+      loadingRotateAnim.setValue(0);
+      Animated.timing(loadingRotateAnim, {
+        toValue: 1,
+        duration: 3000,
+        useNativeDriver: true,
+      }).start(rotateLoop);
+    };
+
+    // Floating animation
+    const floatLoop = () => {
+      Animated.sequence([
+        Animated.timing(loadingFloatAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(loadingFloatAnim, {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ]).start(floatLoop);
+    };
+
+    // Shimmer effect
+    const shimmerLoop = () => {
+      loadingShimmerAnim.setValue(0);
+      Animated.timing(loadingShimmerAnim, {
+        toValue: 1,
+        duration: 1500,
+        useNativeDriver: true,
+      }).start(() => {
+        setTimeout(shimmerLoop, 500);
+      });
+    };
+
+    // Floating dots animation
+    const dotsLoop = () => {
+      Animated.sequence([
+        Animated.timing(loadingDotsAnim, {
+          toValue: 1,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(loadingDotsAnim, {
+          toValue: 0,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+      ]).start(dotsLoop);
+    };
+
+    // Progress bar animation (width animation needs useNativeDriver: false)
+    const progressLoop = () => {
+      loadingProgressAnim.setValue(0);
+      Animated.timing(loadingProgressAnim, {
+        toValue: 1,
+        duration: 2000,
+        useNativeDriver: false, // Width animation requires this
+      }).start(() => {
+        setTimeout(progressLoop, 500);
+      });
+    };
+
+    pulseLoop();
+    rotateLoop();
+    floatLoop();
+    shimmerLoop();
+    dotsLoop();
+    progressLoop();
+  };
+
+  // Helper function to get auth headers
+  const getAuthHeaders = async () => {
+    try {
+      const tokensString = await AsyncStorage.getItem("ERPTokens");
+      if (!tokensString) {
+        console.log("No tokens found in AsyncStorage");
+        return null;
+      }
+      
+      const tokens = JSON.parse(tokensString);
+      if (!tokens.accessToken) {
+        console.log("No access token found in stored tokens");
+        return null;
+      }
+
+      return {
+        'Authorization': `Bearer ${tokens.accessToken}`,
+        'Content-Type': 'application/json',
+      };
+    } catch (error) {
+      console.error("Error getting auth headers:", error);
+      return null;
+    }
+  };
+
   const loadFeeData = async () => {
     try {
       updateState({ loading: true, error: null });
       
-      // Demo data with enhanced structure
-      const demoData = {
-        studentDetails: {
-          roll_no: "BMT_250006",
-          student_name: "Varad Sharma",
-          total_fee: 349000,
-          scholarship_amount: 180000,
-          additional_amount: 20000,
-          final_fee: 149000,
-          academic_year: "2025-26",
-          course: "B.Tech Computer Science",
-          semester: "2nd Semester"
-        },
-        installments: [
-          {
-            id: 627,
-            status: "Paid",
-            installment_number: 1,
-            installment_name: "Security Deposit",
-            discount_amount: null,
-            amount: 10000,
-            due_date: "2025-04-01T00:00:00.000Z",
-            final_fee: 10000,
-            order_id: "CA_250006_1_522025",
-            payment_date: "2025-03-28T00:00:00.000Z",
-            description: "One-time refundable security deposit"
+      const headers = await getAuthHeaders();
+      if (!headers) {
+        console.log('No auth headers, showing demo data');
+        // For demo purposes, show sample data when auth is not available
+        const demoData = {
+          studentDetails: {
+            roll_no: "BMT_250006",
+            total_fee: 349000,
+            scholarship_amount: 180000,
+            additional_amount: 20000,
+            final_fee: 149000
           },
-          {
-            id: 628,
-            status: "Paid",
-            installment_number: 2,
-            installment_name: "1st Semester Fee",
-            discount_amount: 15000,
-            amount: 105000,
-            due_date: "2025-06-01T00:00:00.000Z",
-            final_fee: 90000,
-            order_id: "CA_250006_2_522025",
-            payment_date: "2025-05-25T00:00:00.000Z",
-            description: "Tuition and academic fees for semester 1"
+          installments: [
+            {
+              id: 627,
+              status: "Paid",
+              installment_number: 1,
+              installment_name: "11th security deposit",
+              discount_amount: null,
+              amount: 10000,
+              due_date: "2025-04-01T00:00:00.000Z",
+              final_fee: 10000,
+              order_id: "CA_250006_1_522025"
+            },
+            {
+              id: 628,
+              status: "Paid",
+              installment_number: 2,
+              installment_name: "Class 11th 1st Installment",
+              discount_name: "Scholarship",
+              discount_amount: 15000,
+              amount: 105000,
+              due_date: "2025-04-01T00:00:00.000Z",
+              final_fee: 90000,
+              order_id: "CA_250006_2_522025"
+            },
+            {
+              id: 629,
+              status: "UnPaid",
+              installment_number: 3,
+              installment_name: "11th College Fees",
+              discount_amount: null,
+              amount: 24500,
+              due_date: "2025-06-10T00:00:00.000Z",
+              final_fee: 24500,
+              order_id: null
+            }
+          ]
+        };
+        
+        const transformedData = {
+          studentDetails: {
+            ...demoData.studentDetails,
+            student_name: demoData.studentDetails.roll_no || "Student",
+            course: "Academic Program",
+            academic_year: "2025-26",
+            semester: "Current Semester"
           },
-          {
-            id: 629,
-            status: "Pending",
-            installment_number: 3,
-            installment_name: "2nd Semester Fee",
-            discount_amount: null,
-            amount: 24500,
-            due_date: "2025-08-10T00:00:00.000Z",
-            final_fee: 24500,
-            order_id: null,
-            description: "Tuition and academic fees for semester 2"
-          },
-          {
-            id: 630,
-            status: "Locked",
-            installment_number: 4,
-            installment_name: "Examination Fee",
-            discount_amount: 2000,
-            amount: 12000,
-            due_date: "2025-10-15T00:00:00.000Z",
-            final_fee: 10000,
-            order_id: null,
-            description: "Annual examination and certification fees"
-          }
-        ]
-      };
-      
-      updateState({
-        studentDetails: demoData.studentDetails,
-        installments: demoData.installments,
-        loading: false
+          installments: demoData.installments.map(installment => ({
+            ...installment,
+            status: installment.status === 'UnPaid' ? 'Pending' : installment.status,
+            description: installment.installment_name,
+            payment_date: installment.paid_at,
+            discount_amount: installment.discount_amount || null,
+          }))
+        };
+        
+        updateState({
+          studentDetails: transformedData.studentDetails,
+          installments: transformedData.installments,
+          loading: false
+        });
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/studentfee`, {
+        method: 'GET',
+        headers,
       });
+
+      console.log("Student Fee API response status:", response.status);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Student Fee API data:", data);
+      
+      if (data.studentDetails && data.installments) {
+        // Transform the data to match our component expectations
+        const transformedData = {
+          studentDetails: {
+            ...data.studentDetails,
+            student_name: data.studentDetails.roll_no || "Student", // Fallback name
+            course: "Academic Program", // Default course info
+            academic_year: data.installments[0]?.session?.replace('-', '-') || "2025-26",
+            semester: "Current Semester"
+          },
+          installments: data.installments.map(installment => ({
+            ...installment,
+            // Map status from API format to our expected format
+            status: installment.status === 'UnPaid' ? 'Pending' : installment.status,
+            // Add description if missing
+            description: installment.installment_name,
+            // Map payment date
+            payment_date: installment.paid_at,
+            // Ensure discount_amount is properly handled
+            discount_amount: installment.discount_amount || null,
+          }))
+        };
+        
+        updateState({
+          studentDetails: transformedData.studentDetails,
+          installments: transformedData.installments,
+          loading: false
+        });
+      } else {
+        throw new Error('Invalid response format from API');
+      }
       
     } catch (error) {
       console.error("Error loading fee data:", error);
       updateState({ 
         loading: false,
-        error: "Failed to load fee data. Please try again."
+        error: error.message || "Failed to load fee data. Please try again."
       });
     }
   };
@@ -299,17 +485,32 @@ const ModernFeeScreen = () => {
   const canPayInstallment = (installment) => {
     const currentIndex = state.installments.findIndex(inst => inst.id === installment.id);
     
-    if (currentIndex === 0) {
-      return installment.status === 'Pending';
+    // Check if installment is already paid
+    if (installment.status === 'Paid') {
+      return false;
     }
     
+    // Check if installment has zero final fee (covered by scholarship)
+    if (installment.final_fee === 0) {
+      return false;
+    }
+    
+    // First installment can always be paid if unpaid
+    if (currentIndex === 0) {
+      return installment.status === 'Pending' || installment.status === 'UnPaid';
+    }
+    
+    // Check if previous installment is paid
     const previousInstallment = state.installments[currentIndex - 1];
-    return previousInstallment.status === 'Paid' && installment.status === 'Pending';
+    const isPreviousPaid = previousInstallment.status === 'Paid';
+    const isCurrentUnpaid = installment.status === 'Pending' || installment.status === 'UnPaid';
+    
+    return isPreviousPaid && isCurrentUnpaid;
   };
 
   const getInstallmentStatusInfo = (installment) => {
     const isPaid = installment.status === 'Paid';
-    const isPending = installment.status === 'Pending';
+    const isPending = installment.status === 'Pending' || installment.status === 'UnPaid';
     const isLocked = installment.status === 'Locked' || !canPayInstallment(installment);
     const isOverdue = isPending && new Date(installment.due_date) < new Date();
 
@@ -385,17 +586,29 @@ const ModernFeeScreen = () => {
   // Component Renderers
   const renderFloatingHeader = () => {
     const headerOpacity = scrollY.interpolate({
-      inputRange: [0, 100],
-      outputRange: [0, 1],
+      inputRange: [0, 120, 150],
+      outputRange: [0, 0, 1],
+      extrapolate: 'clamp',
+    });
+
+    const headerTranslateY = scrollY.interpolate({
+      inputRange: [0, 120, 150],
+      outputRange: [-60, -60, 0],
       extrapolate: 'clamp',
     });
 
     return (
-      <Animated.View style={[styles.floatingHeader, { opacity: headerOpacity }]}>
+      <Animated.View style={[
+        styles.floatingHeader, 
+        { 
+          opacity: headerOpacity,
+          transform: [{ translateY: headerTranslateY }]
+        }
+      ]}>
         <View style={styles.floatingHeaderContent}>
           <Text style={styles.floatingHeaderTitle}>Fee Management</Text>
-          <TouchableOpacity style={styles.notificationButton}>
-            <Icon name="notifications-none" size={20} color={theme.colors.neutral600} />
+          <TouchableOpacity style={styles.notificationButton} activeOpacity={0.7}>
+            <Icon name="more-vert" size={20} color={theme.colors.neutral600} />
           </TouchableOpacity>
         </View>
       </Animated.View>
@@ -643,7 +856,7 @@ const ModernFeeScreen = () => {
           </View>
 
           <View style={styles.amountSection}>
-            {installment.discount_amount && (
+            {installment.discount_amount && installment.discount_amount > 0 && (
               <View style={styles.discountContainer}>
                 <View style={styles.discountRow}>
                   <Text style={styles.originalAmount}>
@@ -655,7 +868,7 @@ const ModernFeeScreen = () => {
                   >
                     <Icon name="local-offer" size={12} color="#FFFFFF" />
                     <Text style={styles.discountText}>
-                      -{formatCurrency(installment.discount_amount)}
+                      {installment.discount_name || 'Discount'}: -{formatCurrency(installment.discount_amount)}
                     </Text>
                   </LinearGradient>
                 </View>
@@ -668,7 +881,7 @@ const ModernFeeScreen = () => {
                   {installment.status === 'Paid' ? 'Amount Paid' : 'Amount Due'}
                 </Text>
                 <Text style={[styles.finalAmount, theme.typography.displayMedium, { color: statusInfo.color }]}>
-                  {formatCurrency(installment.final_fee)}
+                  {installment.final_fee === 0 ? 'Free' : formatCurrency(installment.final_fee)}
                 </Text>
               </View>
             </View>
@@ -692,7 +905,7 @@ const ModernFeeScreen = () => {
                 <View style={styles.paidDateContainer}>
                   <Icon name="check-circle" size={14} color={theme.colors.success} />
                   <Text style={styles.paidDate}>
-                    Paid on {formatDate(installment.payment_date)}
+                    {installment.paid_at ? `Paid on ${formatDate(installment.paid_at)}` : 'Payment completed'}
                   </Text>
                 </View>
               </View>
@@ -727,12 +940,14 @@ const ModernFeeScreen = () => {
                   style={styles.scholarshipBadge}
                 >
                   <Icon name="school" size={18} color={theme.colors.success} />
-                  <Text style={styles.scholarshipText}>Covered by Scholarship</Text>
+                  <Text style={styles.scholarshipText}>
+                    {installment.discount_name ? `Covered by ${installment.discount_name}` : 'Covered by Scholarship'}
+                  </Text>
                 </LinearGradient>
               </View>
             )}
 
-            {!canPay && installment.status !== 'Paid' && installment.installment_number > 1 && (
+            {!canPay && installment.status !== 'Paid' && installment.final_fee > 0 && installment.installment_number > 1 && (
               <View style={styles.lockMessageContainer}>
                 <Icon name="info" size={14} color={theme.colors.neutral500} />
                 <Text style={styles.lockHint}>
@@ -746,19 +961,187 @@ const ModernFeeScreen = () => {
     );
   };
 
+  const renderInstallmentsSection = () => (
+    <View style={styles.installmentsSection}>
+      <View style={styles.sectionHeader}>
+        <Text style={[styles.sectionTitle, theme.typography.headlineLarge]}>
+          Fee Installments
+        </Text>
+        <View style={styles.installmentCounter}>
+          <Text style={styles.counterText}>{state.installments.length}</Text>
+        </View>
+      </View>
+
+      <View style={styles.installmentsList}>
+        {state.installments.map((installment, index) => 
+          renderInstallmentCard(installment, index)
+        )}
+      </View>
+    </View>
+  );
+
   const renderLoadingScreen = () => (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.fullScreenContainer}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FAFBFF" />
       <View style={styles.loadingContainer}>
         <View style={styles.loadingContent}>
-          <LinearGradient
-            colors={[theme.colors.primary, theme.colors.primaryLight]}
-            style={styles.loadingIcon}
-          >
-            <Icon name="account-balance-wallet" size={32} color="#FFFFFF" />
-          </LinearGradient>
-          <Text style={[styles.loadingText, theme.typography.bodyLarge]}>
-            Loading fee details...
+          
+          {/* Fixed Modern Loader */}
+          <View style={styles.modernLoader}>
+            
+            {/* Outer rotating ring */}
+            <Animated.View style={[
+              styles.outerRing,
+              {
+                transform: [{
+                  rotate: loadingRotateAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0deg', '360deg']
+                  })
+                }]
+              }
+            ]}>
+              <View style={styles.ringBorder} />
+            </Animated.View>
+
+            {/* Middle pulsing circle */}
+            <Animated.View style={[
+              styles.middleCircle,
+              {
+                transform: [{ scale: loadingPulseAnim }]
+              }
+            ]}>
+              <View style={styles.middleBackground} />
+            </Animated.View>
+
+            {/* Main wallet icon */}
+            <Animated.View style={[
+              styles.walletIconContainer,
+              {
+                transform: [
+                  { scale: loadingPulseAnim.interpolate({
+                    inputRange: [1, 1.2],
+                    outputRange: [1, 0.9]
+                  })}
+                ]
+              }
+            ]}>
+              <View style={styles.walletIconBg}>
+                <Icon name="account-balance-wallet" size={20} color="#667EEA" />
+              </View>
+              
+              {/* Shimmer effect overlay */}
+              <Animated.View style={[
+                styles.shimmerOverlay,
+                {
+                  transform: [{
+                    translateX: loadingShimmerAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-30, 30]
+                    })
+                  }]
+                }
+              ]} />
+            </Animated.View>
+
+            {/* Fixed Floating currency symbols */}
+            <Animated.View style={[
+              styles.floatingElement,
+              styles.currency1,
+              {
+                opacity: loadingFloatAnim.interpolate({
+                  inputRange: [0, 0.5, 1],
+                  outputRange: [0.7, 1, 0.7]
+                })
+              }
+            ]}>
+              <Text style={styles.currencySymbol}>₹</Text>
+            </Animated.View>
+
+            <Animated.View style={[
+              styles.floatingElement,
+              styles.currency2,
+              {
+                opacity: loadingFloatAnim.interpolate({
+                  inputRange: [0, 0.5, 1],
+                  outputRange: [0.5, 0.9, 0.5]
+                })
+              }
+            ]}>
+              <Icon name="payments" size={12} color="#10D876" />
+            </Animated.View>
+
+            <Animated.View style={[
+              styles.floatingElement,
+              styles.currency3,
+              {
+                opacity: loadingFloatAnim.interpolate({
+                  inputRange: [0, 0.5, 1],
+                  outputRange: [0.6, 1, 0.6]
+                })
+              }
+            ]}>
+              <Icon name="credit-card" size={10} color="#FBBF24" />
+            </Animated.View>
+          </View>
+
+          {/* Loading text */}
+          <View style={styles.loadingTextContainer}>
+            <Text style={[styles.loadingText, theme.typography.titleLarge]}>
+              Loading Fee Details
+            </Text>
+            <Animated.View style={[
+              styles.loadingDots,
+              {
+                opacity: loadingShimmerAnim.interpolate({
+                  inputRange: [0, 0.5, 1],
+                  outputRange: [0.3, 1, 0.3]
+                })
+              }
+            ]}>
+              <Text style={styles.dotsText}>...</Text>
+            </Animated.View>
+          </View>
+
+          {/* Progress bar */}
+          <View style={styles.progressBarContainer}>
+            <Animated.View style={[
+              styles.progressBar,
+              {
+                width: loadingProgressAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['0%', '100%']
+                })
+              }
+            ]} />
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderErrorScreen = () => (
+    <SafeAreaView style={styles.fullScreenContainer}>
+      <View style={styles.errorContainer}>
+        <View style={styles.errorContent}>
+          <View style={styles.errorIcon}>
+            <Icon name="error-outline" size={32} color="#FFFFFF" />
+          </View>
+          <Text style={[styles.errorTitle, theme.typography.headlineMedium]}>
+            Unable to Load Fee Details
           </Text>
+          <Text style={[styles.errorText, theme.typography.bodyLarge]}>
+            {state.error}
+          </Text>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={loadFeeData}
+          >
+            <View style={styles.retryButtonGradient}>
+              <Icon name="refresh" size={18} color="#FFFFFF" />
+              <Text style={styles.retryButtonText}>Try Again</Text>
+            </View>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -769,8 +1152,12 @@ const ModernFeeScreen = () => {
     return renderLoadingScreen();
   }
 
+  if (state.error) {
+    return renderErrorScreen();
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
       
       {renderFloatingHeader()}
@@ -787,34 +1174,30 @@ const ModernFeeScreen = () => {
             progressBackgroundColor={theme.colors.surface}
           />
         }
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
+        scrollIndicatorInsets={{ right: 1 }}
+        contentInsetAdjustmentBehavior="automatic"
+        automaticallyAdjustContentInsets={true}
+        contentInset={{ bottom: 80 }}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: false }
         )}
         scrollEventThrottle={16}
+        bounces={true}
+        alwaysBounceVertical={false}
+        keyboardShouldPersistTaps="handled"
+        nestedScrollEnabled={true}
       >
         {renderMainHeader()}
         {renderQuickStats()}
         {renderStudentCard()}
+        {renderInstallmentsSection()}
         
-        <View style={styles.installmentsSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, theme.typography.headlineLarge]}>
-              Fee Installments
-            </Text>
-            <View style={styles.installmentCounter}>
-              <Text style={styles.counterText}>{state.installments.length}</Text>
-            </View>
-          </View>
-
-          <View style={styles.installmentsList}>
-            {state.installments.map((installment, index) => 
-              renderInstallmentCard(installment, index)
-            )}
-          </View>
-        </View>
+        {/* Extra bottom spacing for floating navigation bar */}
+        <View style={styles.navigationBarSpacing} />
         
+        {/* Additional safety padding */}
         <View style={styles.bottomPadding} />
       </Animated.ScrollView>
     </SafeAreaView>
@@ -824,7 +1207,12 @@ const ModernFeeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#FAFBFF',
+    position: 'relative',
+  },
+  fullScreenContainer: {
+    flex: 1,
+    backgroundColor: '#FAFBFF',
   },
 
   // Floating Header
@@ -834,77 +1222,287 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 1000,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: 'rgba(248, 250, 255, 0.95)',
     backdropFilter: 'blur(20px)',
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.neutral200,
+    borderBottomColor: '#E2E8F0',
+    paddingTop: 12,
   },
   floatingHeaderContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: theme.spacing.xl,
-    paddingTop: theme.spacing.xl,
-    paddingBottom: theme.spacing.lg,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    minHeight: 56,
   },
   floatingHeaderTitle: {
-    ...theme.typography.titleLarge,
-    color: theme.colors.neutral800,
+    fontSize: 18,
+    fontWeight: '600',
+    lineHeight: 24,
+    color: '#1E293B',
   },
   notificationButton: {
     width: 40,
     height: 40,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.neutral100,
+    borderRadius: 999,
+    backgroundColor: '#F1F5F9',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
-  // Loading Screen
+  // Loading Screen - Fixed centering
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#FAFBFF',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    minHeight: height,
   },
   loadingContent: {
     alignItems: 'center',
-    gap: theme.spacing.xl,
+    justifyContent: 'center',
+    gap: 32,
+    width: '100%',
+    maxWidth: 300,
   },
-  loadingIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: theme.borderRadius.full,
+
+  // Modern Loader - Fixed size and positioning
+  modernLoader: {
+    width: Math.min(100, width * 0.25),
+    height: Math.min(100, width * 0.25),
     justifyContent: 'center',
     alignItems: 'center',
-    ...theme.shadows.medium,
+    position: 'relative',
+    alignSelf: 'center',
+    marginVertical: 20,
+  },
+  outerRing: {
+    position: 'absolute',
+    width: '85%',
+    height: '85%',
+    borderRadius: 999,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  ringBorder: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 999,
+    borderWidth: 2.5,
+    borderColor: 'transparent',
+    borderTopColor: '#667EEA',
+    borderRightColor: '#7C3AED',
+    borderBottomColor: '#667EEA',
+    borderLeftColor: '#7C3AED',
+  },
+  middleCircle: {
+    position: 'absolute',
+    width: '65%',
+    height: '65%',
+    borderRadius: 999,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  middleBackground: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 999,
+    backgroundColor: '#7C3AED',
+    opacity: 0.15,
+  },
+  walletIconContainer: {
+    width: '45%',
+    height: '45%',
+    borderRadius: 999,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
+    shadowColor: 'rgba(15, 23, 42, 0.15)',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 24,
+    elevation: 8,
+    zIndex: 2,
+  },
+  walletIconBg: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 999,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  shimmerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: '-50%',
+    width: '50%',
+    height: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    transform: [{ skewX: '-20deg' }],
+  },
+
+  // Fixed Floating Elements
+  floatingElement: {
+    position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  currency1: {
+    top: '10%',
+    left: '15%',
+  },
+  currency2: {
+    bottom: '15%',
+    right: '10%',
+  },
+  currency3: {
+    top: '20%',
+    right: '20%',
+  },
+  currencySymbol: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#667EEA',
+  },
+
+  // Loading Text
+  loadingTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
   },
   loadingText: {
-    color: theme.colors.neutral600,
+    color: '#334155',
+    fontWeight: '600',
+    textAlign: 'center',
+    fontSize: 18,
+    lineHeight: 24,
+  },
+  loadingDots: {
+    minWidth: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dotsText: {
+    fontSize: 16,
+    color: '#667EEA',
+    fontWeight: '700',
+  },
+
+  // Progress Bar
+  progressBarContainer: {
+    width: '80%',
+    maxWidth: 200,
+    height: 3,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 2,
+    overflow: 'hidden',
+    alignSelf: 'center',
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#667EEA',
+    borderRadius: 2,
+  },
+
+  // Error Screen
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    backgroundColor: '#FAFBFF',
+  },
+  errorContent: {
+    alignItems: 'center',
+    gap: 32,
+    maxWidth: 320,
+  },
+  errorIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 999,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F87171',
+    shadowColor: 'rgba(15, 23, 42, 0.15)',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 24,
+    elevation: 8,
+  },
+  errorTitle: {
+    color: '#0F172A',
+    textAlign: 'center',
+  },
+  errorText: {
+    color: '#475569',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  retryButton: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: 'rgba(15, 23, 42, 0.08)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  retryButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    gap: 8,
+    backgroundColor: '#667EEA',
+    borderRadius: 20,
+  },
+  retryButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    lineHeight: 22,
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
 
   // Scroll View
   scrollView: {
     flex: 1,
+    backgroundColor: '#FAFBFF',
   },
   scrollContent: {
-    paddingHorizontal: theme.spacing.xl,
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingBottom: 120,
   },
 
   // Main Header
   mainHeader: {
-    paddingTop: theme.spacing.xl,
-    paddingBottom: theme.spacing.xxl,
+    paddingTop: 24,
+    paddingBottom: 32,
+    marginTop: 16,
   },
   headerContent: {
     alignItems: 'center',
   },
   headerTitle: {
-    color: theme.colors.neutral900,
-    marginBottom: theme.spacing.sm,
+    color: '#0F172A',
+    marginBottom: 8,
     textAlign: 'center',
   },
   headerSubtitle: {
-    color: theme.colors.neutral600,
+    color: '#475569',
     textAlign: 'center',
     maxWidth: width * 0.8,
   },
@@ -912,49 +1510,57 @@ const styles = StyleSheet.create({
   // Quick Stats
   quickStatsContainer: {
     flexDirection: 'row',
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.xxxl,
+    gap: 12,
+    marginBottom: 32,
   },
   statCard: {
     flex: 1,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.xl,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
     alignItems: 'center',
     position: 'relative',
     overflow: 'hidden',
-    ...theme.shadows.medium,
+    shadowColor: 'rgba(15, 23, 42, 0.15)',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 24,
+    elevation: 8,
   },
   paidStatCard: {
     borderLeftWidth: 4,
-    borderLeftColor: theme.colors.success,
+    borderLeftColor: '#10D876',
   },
   pendingStatCard: {
     borderLeftWidth: 4,
-    borderLeftColor: theme.colors.warning,
+    borderLeftColor: '#FBBF24',
   },
   progressStatCard: {
     borderLeftWidth: 4,
-    borderLeftColor: theme.colors.primary,
+    borderLeftColor: '#667EEA',
   },
   statIconContainer: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: 16,
   },
   statIcon: {
     width: 40,
     height: 40,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    ...theme.shadows.soft,
+    shadowColor: 'rgba(15, 23, 42, 0.08)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   statValue: {
-    color: theme.colors.neutral900,
-    marginBottom: theme.spacing.sm,
+    color: '#0F172A',
+    marginBottom: 8,
     textAlign: 'center',
   },
   statLabel: {
-    color: theme.colors.neutral600,
+    color: '#475569',
     textAlign: 'center',
   },
   statAccent: {
@@ -963,18 +1569,22 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 3,
-    backgroundColor: theme.colors.success,
+    backgroundColor: '#10D876',
   },
 
   // Student Card
   studentCard: {
-    marginBottom: theme.spacing.xxxl,
-    borderRadius: theme.borderRadius.xxl,
+    marginBottom: 32,
+    borderRadius: 24,
     overflow: 'hidden',
-    ...theme.shadows.medium,
+    shadowColor: 'rgba(15, 23, 42, 0.15)',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 24,
+    elevation: 8,
   },
   studentCardGradient: {
-    padding: theme.spacing.xxl,
+    padding: 24,
     position: 'relative',
   },
   floatingElements: {
@@ -987,7 +1597,7 @@ const styles = StyleSheet.create({
   floatingDot: {
     position: 'absolute',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: theme.borderRadius.full,
+    borderRadius: 999,
   },
   dot1: {
     width: 120,
@@ -1008,7 +1618,7 @@ const styles = StyleSheet.create({
     right: '20%',
   },
   studentCardContent: {
-    gap: theme.spacing.xl,
+    gap: 20,
     position: 'relative',
     zIndex: 1,
   },
@@ -1018,15 +1628,19 @@ const styles = StyleSheet.create({
   },
   studentAvatarContainer: {
     position: 'relative',
-    marginRight: theme.spacing.xl,
+    marginRight: 20,
   },
   studentAvatar: {
     width: 70,
     height: 70,
-    borderRadius: theme.borderRadius.full,
+    borderRadius: 999,
     justifyContent: 'center',
     alignItems: 'center',
-    ...theme.shadows.soft,
+    shadowColor: 'rgba(15, 23, 42, 0.08)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   avatarRing: {
     position: 'absolute',
@@ -1034,12 +1648,14 @@ const styles = StyleSheet.create({
     left: -4,
     right: -4,
     bottom: -4,
-    borderRadius: theme.borderRadius.full,
+    borderRadius: 999,
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   avatarText: {
-    ...theme.typography.headlineMedium,
+    fontSize: 20,
+    fontWeight: '600',
+    lineHeight: 28,
     color: '#FFFFFF',
     fontWeight: '800',
   },
@@ -1048,23 +1664,27 @@ const styles = StyleSheet.create({
   },
   studentName: {
     color: '#FFFFFF',
-    marginBottom: theme.spacing.sm,
+    marginBottom: 8,
   },
   courseText: {
-    ...theme.typography.bodyLarge,
+    fontSize: 16,
+    fontWeight: '400',
+    lineHeight: 24,
     color: 'rgba(255, 255, 255, 0.9)',
-    marginBottom: theme.spacing.sm,
+    marginBottom: 8,
     fontWeight: '500',
   },
   yearBadge: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.lg,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 16,
     alignSelf: 'flex-start',
   },
   yearText: {
-    ...theme.typography.labelMedium,
+    fontSize: 12,
+    fontWeight: '500',
+    lineHeight: 16,
     color: '#FFFFFF',
     fontWeight: '700',
   },
@@ -1072,44 +1692,48 @@ const styles = StyleSheet.create({
   // Progress
   progressContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.xl,
+    borderRadius: 20,
+    padding: 20,
     backdropFilter: 'blur(10px)',
   },
   progressHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing.lg,
+    marginBottom: 16,
   },
   progressLabel: {
-    ...theme.typography.titleMedium,
+    fontSize: 16,
+    fontWeight: '600',
+    lineHeight: 22,
     color: 'rgba(255, 255, 255, 0.9)',
     fontWeight: '600',
   },
   progressBadge: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.lg,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
   },
   progressPercent: {
-    ...theme.typography.titleMedium,
+    fontSize: 16,
+    fontWeight: '600',
+    lineHeight: 22,
     color: '#FFFFFF',
     fontWeight: '800',
   },
   progressTrack: {
     height: 12,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: theme.borderRadius.sm,
+    borderRadius: 8,
     overflow: 'hidden',
-    marginBottom: theme.spacing.lg,
+    marginBottom: 16,
     position: 'relative',
   },
   progressFill: {
     height: '100%',
     backgroundColor: '#FFFFFF',
-    borderRadius: theme.borderRadius.sm,
+    borderRadius: 8,
     position: 'relative',
   },
   progressGlow: {
@@ -1120,7 +1744,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: '#FFFFFF',
     opacity: 0.3,
-    borderRadius: theme.borderRadius.sm,
+    borderRadius: 8,
   },
   amountInfo: {
     flexDirection: 'row',
@@ -1135,58 +1759,78 @@ const styles = StyleSheet.create({
     width: 1,
     height: 30,
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    marginHorizontal: theme.spacing.lg,
+    marginHorizontal: 16,
   },
   amountLabel: {
-    ...theme.typography.labelMedium,
+    fontSize: 12,
+    fontWeight: '500',
+    lineHeight: 16,
     color: 'rgba(255, 255, 255, 0.8)',
-    marginBottom: theme.spacing.xs,
+    marginBottom: 4,
   },
   amountValue: {
-    ...theme.typography.titleLarge,
+    fontSize: 18,
+    fontWeight: '600',
+    lineHeight: 24,
     color: '#FFFFFF',
     fontWeight: '700',
   },
 
   // Installments Section
   installmentsSection: {
-    marginBottom: theme.spacing.xxl,
+    marginBottom: 32,
+    paddingBottom: 24,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing.xl,
+    marginBottom: 24,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
   },
   sectionTitle: {
-    color: theme.colors.neutral900,
+    color: '#0F172A',
+    fontWeight: '800',
   },
   installmentCounter: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.full,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-    minWidth: 32,
+    backgroundColor: '#667EEA',
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    minWidth: 40,
     alignItems: 'center',
+    shadowColor: 'rgba(15, 23, 42, 0.08)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   counterText: {
-    ...theme.typography.labelMedium,
+    fontSize: 16,
+    fontWeight: '600',
+    lineHeight: 22,
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontWeight: '800',
   },
 
   // Installment Cards
   installmentsList: {
-    gap: theme.spacing.xl,
+    gap: 20,
   },
   installmentCard: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.xxl,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
     overflow: 'hidden',
-    ...theme.shadows.medium,
+    shadowColor: 'rgba(15, 23, 42, 0.15)',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 24,
+    elevation: 8,
   },
   cardContainer: {
-    padding: theme.spacing.xxl,
+    padding: 24,
     position: 'relative',
   },
   statusBorder: {
@@ -1202,25 +1846,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: theme.spacing.xl,
+    marginBottom: 20,
   },
   installmentMeta: {
     flexDirection: 'row',
     flex: 1,
-    marginRight: theme.spacing.lg,
+    marginRight: 16,
   },
   installmentBadge: {
     width: 56,
     height: 56,
-    borderRadius: theme.borderRadius.lg,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: theme.spacing.lg,
+    marginRight: 16,
     position: 'relative',
-    ...theme.shadows.soft,
+    shadowColor: 'rgba(15, 23, 42, 0.08)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   badgeNumber: {
-    ...theme.typography.headlineMedium,
+    fontSize: 20,
+    fontWeight: '600',
+    lineHeight: 28,
     color: '#FFFFFF',
     fontWeight: '900',
     position: 'relative',
@@ -1233,40 +1883,46 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: theme.borderRadius.lg,
+    borderRadius: 16,
   },
   installmentInfo: {
     flex: 1,
   },
   installmentTitle: {
-    color: theme.colors.neutral900,
-    marginBottom: theme.spacing.sm,
+    color: '#0F172A',
+    marginBottom: 8,
     fontWeight: '700',
   },
   installmentDesc: {
-    color: theme.colors.neutral600,
-    marginBottom: theme.spacing.md,
+    color: '#475569',
+    marginBottom: 12,
     lineHeight: 20,
   },
   dateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.xs,
+    gap: 4,
   },
   dueDate: {
-    color: theme.colors.neutral500,
+    color: '#64748B',
   },
   statusChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.xl,
-    gap: theme.spacing.sm,
-    ...theme.shadows.soft,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 20,
+    gap: 8,
+    shadowColor: 'rgba(15, 23, 42, 0.08)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   statusLabel: {
-    ...theme.typography.labelSmall,
+    fontSize: 11,
+    fontWeight: '500',
+    lineHeight: 14,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -1274,43 +1930,51 @@ const styles = StyleSheet.create({
 
   // Amount Section
   amountSection: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: 20,
   },
   discountContainer: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: 16,
   },
   discountRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: theme.colors.neutral50,
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
+    backgroundColor: '#F8FAFC',
+    padding: 16,
+    borderRadius: 16,
   },
   originalAmount: {
-    ...theme.typography.bodyLarge,
-    color: theme.colors.neutral500,
+    fontSize: 16,
+    fontWeight: '400',
+    lineHeight: 24,
+    color: '#64748B',
     textDecorationLine: 'line-through',
     fontWeight: '500',
   },
   discountBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.lg,
-    gap: theme.spacing.xs,
-    ...theme.shadows.soft,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    gap: 4,
+    shadowColor: 'rgba(15, 23, 42, 0.08)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   discountText: {
-    ...theme.typography.labelMedium,
+    fontSize: 12,
+    fontWeight: '500',
+    lineHeight: 16,
     color: '#FFFFFF',
     fontWeight: '700',
   },
   finalAmountContainer: {
-    backgroundColor: theme.colors.backgroundSecondary,
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.xl,
+    backgroundColor: '#F7F9FC',
+    borderRadius: 20,
+    padding: 20,
   },
   finalAmountRow: {
     flexDirection: 'row',
@@ -1318,7 +1982,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   amountLabel: {
-    color: theme.colors.neutral600,
+    color: '#475569',
     fontWeight: '600',
   },
   finalAmount: {
@@ -1327,45 +1991,57 @@ const styles = StyleSheet.create({
 
   // Action Section
   actionSection: {
-    gap: theme.spacing.lg,
+    gap: 16,
   },
   paidSection: {
-    gap: theme.spacing.lg,
+    gap: 16,
   },
   receiptButton: {
-    borderRadius: theme.borderRadius.xl,
+    borderRadius: 20,
     overflow: 'hidden',
-    ...theme.shadows.soft,
+    shadowColor: 'rgba(15, 23, 42, 0.08)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   receiptButtonBg: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: theme.spacing.xl,
-    paddingHorizontal: theme.spacing.xxl,
-    gap: theme.spacing.md,
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    gap: 12,
     borderWidth: 2,
-    borderColor: theme.colors.success,
+    borderColor: '#10D876',
   },
   receiptText: {
-    ...theme.typography.titleMedium,
-    color: theme.colors.success,
+    fontSize: 16,
+    fontWeight: '600',
+    lineHeight: 22,
+    color: '#10D876',
     fontWeight: '700',
   },
   paidDateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: theme.spacing.sm,
+    gap: 8,
   },
   paidDate: {
-    ...theme.typography.labelLarge,
-    color: theme.colors.neutral500,
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight: 20,
+    color: '#64748B',
   },
   payButton: {
-    borderRadius: theme.borderRadius.xl,
+    borderRadius: 20,
     overflow: 'hidden',
-    ...theme.shadows.medium,
+    shadowColor: 'rgba(15, 23, 42, 0.15)',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 24,
+    elevation: 8,
   },
   lockedButton: {
     opacity: 0.7,
@@ -1374,13 +2050,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: theme.spacing.xl,
-    paddingHorizontal: theme.spacing.xxl,
-    gap: theme.spacing.md,
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    gap: 12,
     position: 'relative',
   },
   payButtonText: {
-    ...theme.typography.titleMedium,
+    fontSize: 16,
+    fontWeight: '600',
+    lineHeight: 22,
     color: '#FFFFFF',
     fontWeight: '800',
   },
@@ -1393,42 +2071,53 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   scholarshipContainer: {
-    borderRadius: theme.borderRadius.xl,
+    borderRadius: 20,
     overflow: 'hidden',
   },
   scholarshipBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: theme.spacing.xl,
-    paddingHorizontal: theme.spacing.xxl,
-    gap: theme.spacing.md,
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    gap: 12,
     borderWidth: 2,
-    borderColor: theme.colors.success,
+    borderColor: '#10D876',
   },
   scholarshipText: {
-    ...theme.typography.titleMedium,
-    color: theme.colors.success,
+    fontSize: 16,
+    fontWeight: '600',
+    lineHeight: 22,
+    color: '#10D876',
     fontWeight: '700',
   },
   lockMessageContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: theme.spacing.sm,
-    backgroundColor: theme.colors.neutral100,
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
+    gap: 8,
+    backgroundColor: '#F1F5F9',
+    padding: 16,
+    borderRadius: 16,
   },
   lockHint: {
-    ...theme.typography.labelLarge,
-    color: theme.colors.neutral500,
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight: 20,
+    color: '#64748B',
     fontStyle: 'italic',
   },
 
   // Bottom Padding
   bottomPadding: {
-    height: theme.spacing.xxxxxl,
+    height: 100,
+    backgroundColor: 'transparent',
+  },
+
+  // Navigation Bar Spacing
+  navigationBarSpacing: {
+    height: 80,
+    backgroundColor: 'transparent',
   },
 });
 
