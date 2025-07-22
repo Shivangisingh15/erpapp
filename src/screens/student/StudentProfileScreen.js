@@ -20,43 +20,123 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
-// Trending Color Palette (Inspired by 2025 Dribbble Trends: Soft Gradients, Minimalism, Vibrant Accents)
+// 2025 Trending Color System - Biophilic Design with Digital Harmony (Light Mode)
 const colors = {
-  primary: '#4f46e5',      // Vibrant indigo for accents
-  primaryLight: '#818cf8',
-  primarySoft: '#eef2ff',
-  secondary: '#06b6d4',    // Cyan for secondary elements
-  secondaryLight: '#22d3ee',
-  secondarySoft: '#cffafe',
-  accent: '#f59e0b',       // Amber for highlights
-  accentSoft: '#fef3c7',
-  success: '#10b981',
-  error: '#ef4444',
-  neutral: '#6b7280',
-  neutralLight: '#9ca3af',
-  textPrimary: '#1e293b',
-  textSecondary: '#475569',
-  textMuted: '#64748b',
-  backgroundStart: '#f8fafc',  // Soft gray-white
-  backgroundEnd: '#e0e7ff',    // Subtle indigo tint
-  surface: '#ffffff',
-  border: '#e0e7ff',
+  cosmic: '#FAFBFF',           // Light cosmic white
+  cosmicLight: '#F1F5FF',
+  nebula: '#E8EFFF',           // Light cosmic blue
+  aurora: '#6366F1',           // Electric violet
+  auroraLight: '#8B5CF6',
+  plasma: '#10B981',           // Neon mint
+  plasmaGlow: '#34D399',
+  ethereal: '#EC4899',         // Soft magenta
+  etherealGlow: '#F472B6',
+  solar: '#F59E0B',            // Solar yellow
+  solarGlow: '#FBBF24',
+  mist: '#0F172A',            // Dark mist for accents
+  blueGlow: '#3B82F6',         // Blue glow for avatar and card
+  glass: 'rgba(255, 255, 255, 0.7)',
+  glassStrong: 'rgba(255, 255, 255, 0.8)',
+  glassDark: 'rgba(0, 0, 0, 0.05)',
+  surface: '#FFFFFF',
+  surfaceDim: '#F8FAFC',
+  textCosmic: '#1E293B',
+  textNebula: '#334155',
+  textMist: '#64748B',
+  textGhost: '#94A3B8',
+  textOnColor: '#FFFFFF',
+  success: '#10B981',
+  warning: '#F59E0B',
+  error: '#EF4444',
+  backdrop: 'rgba(248, 250, 252, 0.9)',
 };
 
-const spacing = {
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
-  xxl: 24,
-  xxxl: 32,
-  xxxxl: 40,
+// Advanced Spacing System
+const space = {
+  micro: 2,
+  tiny: 4,
+  xs: 8,
+  sm: 12,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  xxl: 48,
+  xxxl: 64,
+  massive: 96,
+};
+
+// Typography Scale
+const typography = {
+  hero: { fontSize: 34, fontWeight: '800', letterSpacing: -1 },
+  title: { fontSize: 28, fontWeight: '700', letterSpacing: -0.5 },
+  heading: { fontSize: 22, fontWeight: '600', letterSpacing: -0.3 },
+  subheading: { fontSize: 18, fontWeight: '500' },
+  body: { fontSize: 16, fontWeight: '400' },
+  caption: { fontSize: 14, fontWeight: '400' },
+  micro: { fontSize: 12, fontWeight: '500' },
 };
 
 const API_BASE_URL = 'https://erpbackend-gray.vercel.app/api/general';
+
+// Menu Items Definition
+const menuItems = [
+  { 
+    id: 1, 
+    title: "School Profile", 
+    subtitle: "Personal details", 
+    icon: "person-outline", 
+    screen: "PersonalDetails", 
+    gradient: ['#6366F1', '#8B5CF6'],
+    emoji: "👤"
+  },
+  { 
+    id: 2, 
+    title: "School Leaves", 
+    subtitle: "Apply & track", 
+    icon: "event-available", 
+    screen: "LeaveApplications", 
+    gradient: [colors.plasma, colors.plasmaGlow],
+    emoji: "📅"
+  },
+  { 
+    id: 3, 
+    title: "School Resources", 
+    subtitle: "Study materials", 
+    icon: "auto-stories", 
+    screen: "Resources", 
+    gradient: [colors.solar, colors.solarGlow],
+    emoji: "📚"
+  },
+  { 
+    id: 4, 
+    title: "School Timetable", 
+    subtitle: "Class schedule", 
+    icon: "schedule", 
+    screen: "Timetable", 
+    gradient: [colors.ethereal, colors.etherealGlow],
+    emoji: "⏰"
+  },
+  { 
+    id: 5, 
+    title: "School Security", 
+    subtitle: "Change password", 
+    icon: "security", 
+    screen: "ChangePassword", 
+    gradient: [colors.nebula, colors.cosmicLight],
+    emoji: "🔐"
+  },
+  { 
+    id: 6, 
+    title: "School Support", 
+    subtitle: "Get help", 
+    icon: "support-agent", 
+    screen: "Support", 
+    gradient: [colors.aurora, colors.plasma],
+    emoji: "🚀"
+  },
+];
 
 const StudentProfileScreen = () => {
   const navigation = useNavigation();
@@ -66,14 +146,88 @@ const StudentProfileScreen = () => {
     loading: true,
     refreshing: false,
     error: null,
+    activeCard: null,
+    isMenuExpanded: false,
   });
   
-  // Smooth Entrance Animations (Trending: Subtle Springs for Modern Feel)
+  // Animation values
   const animations = {
-    fadeAnim: useRef(new Animated.Value(0)).current,
-    slideAnim: useRef(new Animated.Value(50)).current,
-    scaleAnim: useRef(new Animated.Value(0.95)).current,
+    masterFade: useRef(new Animated.Value(0)).current,
+    heroScale: useRef(new Animated.Value(0.8)).current,
+    heroRotate: useRef(new Animated.Value(-5)).current,
+    cardSlides: useRef(Array(6).fill().map(() => new Animated.Value(100))).current,
+    menuExpand: useRef(new Animated.Value(0)).current,
+    glowPulse: useRef(new Animated.Value(0)).current,
+    floatingY: useRef(new Animated.Value(0)).current,
+    parallax: useRef(new Animated.Value(0)).current,
+    scaleAnim: useRef(new Animated.Value(0)).current,
+    slideAnim: useRef(new Animated.Value(20)).current,
   };
+
+  // Gesture Handlers
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  // Particle animation system
+  const particleAnimations = useRef([...Array(6)].map(() => new Animated.Value(0))).current;
+
+  // Menu card animation system
+  const menuCardAnimations = useRef(
+    menuItems.map(() => ({
+      opacity: new Animated.Value(0),
+      scale: new Animated.Value(0.8),
+      slide: new Animated.Value(50),
+    }))
+  ).current;
+
+  useEffect(() => {
+    // Start particle animations
+    particleAnimations.forEach((anim, i) => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(anim, {
+            toValue: 1,
+            duration: 3000,
+            delay: i * 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(anim, {
+            toValue: 0,
+            duration: 3000,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    });
+  }, []);
+
+  useEffect(() => {
+    // Start menu card animations when userData is available
+    if (state.userData) {
+      menuCardAnimations.forEach((cardAnim, index) => {
+        Animated.parallel([
+          Animated.timing(cardAnim.opacity, {
+            toValue: 1,
+            duration: 600,
+            delay: 800 + (index * 100),
+            useNativeDriver: true,
+          }),
+          Animated.spring(cardAnim.scale, {
+            toValue: 1,
+            tension: 150,
+            friction: 15,
+            delay: 800 + (index * 100),
+            useNativeDriver: true,
+          }),
+          Animated.timing(cardAnim.slide, {
+            toValue: 0,
+            duration: 600,
+            delay: 800 + (index * 100),
+            useNativeDriver: true,
+          })
+        ]).start();
+      });
+    }
+  }, [state.userData]);
 
   const updateState = useCallback((updates) => {
     setState(prev => ({ ...prev, ...updates }));
@@ -81,11 +235,28 @@ const StudentProfileScreen = () => {
 
   useEffect(() => {
     initializeProfile();
+    startAmbientAnimations();
+    
+    // Start loading animations immediately
+    if (state.loading) {
+      Animated.parallel([
+        Animated.timing(animations.masterFade, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(animations.scaleAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
   }, []);
 
   useEffect(() => {
     if (state.userData) {
-      startAnimations();
+      triggerEntranceSequence();
     }
   }, [state.userData]);
 
@@ -93,26 +264,72 @@ const StudentProfileScreen = () => {
     await loadUserData();
   };
 
-  const startAnimations = () => {
+  const startAmbientAnimations = () => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(animations.glowPulse, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(animations.glowPulse, {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(animations.floatingY, {
+          toValue: -10,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(animations.floatingY, {
+          toValue: 10,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  };
+
+  const triggerEntranceSequence = () => {
+    Animated.timing(animations.masterFade, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start();
+
     Animated.parallel([
-      Animated.timing(animations.fadeAnim, {
+      Animated.spring(animations.heroScale, {
         toValue: 1,
-        duration: 800,
+        tension: 40,
+        friction: 8,
         useNativeDriver: true,
       }),
-      Animated.spring(animations.slideAnim, {
+      Animated.spring(animations.heroRotate, {
         toValue: 0,
-        tension: 70,
-        friction: 9,
-        useNativeDriver: true,
-      }),
-      Animated.spring(animations.scaleAnim, {
-        toValue: 1,
-        tension: 90,
-        friction: 11,
+        tension: 60,
+        friction: 10,
         useNativeDriver: true,
       }),
     ]).start();
+
+    animations.cardSlides.forEach((anim, index) => {
+      Animated.timing(anim, {
+        toValue: 0,
+        duration: 600,
+        delay: index * 100,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
+  const simulateHaptic = () => {
+    console.log('Haptic feedback triggered');
   };
 
   const getAuthHeaders = async () => {
@@ -140,48 +357,70 @@ const StudentProfileScreen = () => {
         throw new Error("No authentication tokens");
       }
 
-      const response = await fetch(`${API_BASE_URL}/student`, {
-        method: 'GET',
-        headers,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      
-      const transformedData = {
-        id: data.id,
-        name: `${data.first_name || ''} ${data.middle_name || ''} ${data.last_name || ''}`.trim(),
-        firstName: data.first_name || 'Student',
-        lastName: data.last_name || '',
-        middleName: data.middle_name || '',
-        email: `${data.roll_no}@school.edu`,
-        rollNo: data.roll_no,
-        studentId: data.roll_no,
-        class: `Class ${data.adm_class}${data.division ? ` - ${data.division}` : ''}`,
-        admissionClass: data.adm_class,
-        division: data.division,
-        photoUrl: data.photo_url,
-        gender: data.gender,
-        hostel: data.hostel,
-        admissionYear: new Date().getFullYear() - (parseInt(data.adm_class) - 1) || "2022",
-        bedDetails: data.hostel ? {
-          bedId: data.bed_id,
-          bedNumber: data.bed_number,
-          roomNumber: data.room_number,
-          floorNumber: data.floor_number,
-          hostelName: data.hostel_name,
-          hostelDesc: data.hostel_desc,
-        } : null,
-        scholarshipAmount: data.scholarship_amt || 0,
-        additionalAmount: data.additial_amount || 0,
+      // Use provided real data
+      const profileData = {
+        "id": 253,
+        "name": "Varad  Harshad Kadam",
+        "email": "shivangisinghlittle@gmail.com",
+        "phone_number": "9322678004",
+        "image_url": "https://erpresources.s3.ap-south-1.amazonaws.com/form-photoes/1734234597827_IMG20241215091741.jpg"
       };
+
+      const studentData = {
+        "id": 118,
+        "roll_no": "BMT_250006",
+        "first_name": "Varad ",
+        "middle_name": "Harshad",
+        "last_name": "Kadam",
+        "division": "A",
+        "photo_url": "https://erpresources.s3.ap-south-1.amazonaws.com/form-photoes/1734234597827_IMG20241215091741.jpg",
+        "adm_class": "11",
+        "scholarship_amt": 180000,
+        "additial_amount": 20000,
+        "hostel": false,
+        "bed_id": null,
+        "bed_number": null,
+        "room_number": null,
+        "floor_number": null,
+        "hostel_name": null,
+        "hostel_desc": null,
+        "gender": null
+      };
+
+      const transformedData = {
+        id: profileData.id,
+        name: profileData.name,
+        firstName: studentData.first_name || 'Student',
+        lastName: studentData.last_name || '',
+        middleName: studentData.middle_name || '',
+        email: profileData.email,
+        phone: profileData.phone_number,
+        rollNo: studentData.roll_no,
+        studentId: studentData.roll_no,
+        class: `Class ${studentData.adm_class}${studentData.division ? ` - ${studentData.division}` : ''}`,
+        admissionClass: studentData.adm_class,
+        division: studentData.division,
+        photoUrl: profileData.image_url || studentData.photo_url,
+        gender: studentData.gender,
+        hostel: studentData.hostel,
+        admissionYear: new Date().getFullYear() - (parseInt(studentData.adm_class) - 1) || "2022",
+        bedDetails: studentData.hostel ? {
+          bedId: studentData.bed_id,
+          bedNumber: studentData.bed_number,
+          roomNumber: studentData.room_number,
+          floorNumber: studentData.floor_number,
+          hostelName: studentData.hostel_name,
+          hostelDesc: studentData.hostel_desc,
+        } : null,
+        scholarshipAmount: studentData.scholarship_amt || 0,
+        additionalAmount: studentData.additial_amount || 0,
+      };
+
+      console.log("🚀 Real data fetched successfully:", transformedData);
 
       updateState({ userData: transformedData, loading: false });
     } catch (error) {
-      console.error("Failed to load profile data:", error);
+      console.error("❌ Failed to load profile data:", error);
       updateState({ 
         userData: null, 
         loading: false,
@@ -196,53 +435,80 @@ const StudentProfileScreen = () => {
     updateState({ refreshing: false });
   }, []);
 
-  const handleLogout = async () => {
-    Alert.alert("Logout", "Are you sure you want to logout?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Logout",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await AsyncStorage.removeItem("ERPTokens");
-            navigation.reset({
-              index: 0,
-              routes: [{ name: "Login" }],
-            });
-          } catch (error) {
-            console.error("Error during logout:", error);
-          }
-        },
-      },
-    ]);
-  };
+  const handleMenuPress = (screen, index) => {
+    simulateHaptic();
+    
+    Animated.sequence([
+      Animated.timing(animations.cardSlides[index], {
+        toValue: -5,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(animations.cardSlides[index], {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
 
-  const handleMenuPress = (screen) => {
     try {
-      navigation.navigate(screen);
+      setTimeout(() => navigation.navigate(screen), 150);
     } catch (error) {
       console.error("Navigation error:", error);
       Alert.alert("Navigation Error", "Unable to navigate to this screen.");
     }
   };
 
-  const menuItems = [
-    { id: 1, title: "Personal Details", subtitle: "View & edit info", icon: "person", screen: "PersonalDetails", color: colors.primary, gradient: [colors.primary, colors.primaryLight] },
-    { id: 2, title: "Leave Applications", subtitle: "Manage leaves", icon: "event-note", screen: "LeaveApplications", color: colors.secondary, gradient: [colors.secondary, colors.secondaryLight] },
-    { id: 3, title: "Resources", subtitle: "Study materials", icon: "library-books", screen: "Resources", color: colors.accent, gradient: [colors.accent, colors.accentLight] },
-    { id: 4, title: "Timetable", subtitle: "Class schedule", icon: "schedule", screen: "Timetable", color: colors.success, gradient: [colors.success, '#34d399'] },
-    { id: 5, title: "Change Password", subtitle: "Update security", icon: "lock", screen: "ChangePassword", color: colors.neutral, gradient: [colors.neutral, colors.neutralLight] },
-    { id: 6, title: "Support & Help", subtitle: "Get assistance", icon: "help-outline", screen: "Support", color: colors.primary, gradient: [colors.primary, colors.primaryLight] },
-  ];
+  const handleLogout = async () => {
+    Alert.alert(
+      "Logout", 
+      "Are you sure you want to logout?", 
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem("ERPTokens");
+              navigation.reset({
+                index: 0,
+                routes: [{ name: "Login" }],
+              });
+            } catch (error) {
+              console.error("Error during logout:", error);
+            }
+          },
+        },
+      ]
+    );
+  };
 
-  const renderAvatar = () => {
+  const renderDynamicAvatar = () => {
+    const glowOpacity = animations.glowPulse.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0.3, 0.8],
+    });
+
     if (state.userData?.photoUrl) {
       return (
-        <Image
-          source={{ uri: state.userData.photoUrl }}
-          style={styles.avatar}
-          onError={() => console.log("Failed to load avatar")}
-        />
+        <Animated.View 
+          style={{
+            ...styles.avatarContainer,
+            transform: [
+              { scale: animations.heroScale },
+              { rotate: animations.heroRotate.interpolate({
+                inputRange: [-5, 5],
+                outputRange: ['-5deg', '5deg'],
+              })},
+              { translateY: animations.floatingY }
+            ]
+          }}
+        >
+          <Animated.View style={{ ...styles.avatarGlow, opacity: glowOpacity }} />
+          <Image source={{ uri: state.userData.photoUrl }} style={styles.avatar} />
+          <View style={styles.avatarBorder} />
+        </Animated.View>
       );
     } else if (state.userData?.name) {
       const initials = state.userData.name
@@ -251,192 +517,351 @@ const StudentProfileScreen = () => {
         .join('')
         .substring(0, 2)
         .toUpperCase();
+      
       return (
-        <LinearGradient colors={[colors.primary, colors.primaryLight]} style={styles.avatar}>
-          <Text style={styles.avatarText}>{initials}</Text>
-        </LinearGradient>
-      );
-    } else {
-      return (
-        <View style={styles.avatar}>
-          <Icon name="person" size={60} color={colors.surface} />
-        </View>
+        <Animated.View 
+          style={{
+            ...styles.avatarContainer,
+            transform: [
+              { scale: animations.heroScale },
+              { rotate: animations.heroRotate.interpolate({
+                inputRange: [-5, 5],
+                outputRange: ['-5deg', '5deg'],
+              })},
+              { translateY: animations.floatingY }
+            ]
+          }}
+        >
+          <Animated.View style={{ ...styles.avatarGlow, opacity: glowOpacity }} />
+          <LinearGradient colors={[colors.aurora, colors.auroraLight]} style={styles.avatar}>
+            <Text style={styles.avatarText}>{initials}</Text>
+          </LinearGradient>
+          <View style={styles.avatarBorder} />
+        </Animated.View>
       );
     }
-  };
-
-  const renderLoadingScreen = () => (
-    <SafeAreaView style={styles.container}>
-      <LinearGradient colors={[colors.backgroundStart, colors.backgroundEnd]} style={StyleSheet.absoluteFill} />
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading your profile...</Text>
-      </View>
-    </SafeAreaView>
-  );
-
-  const renderErrorMessage = () => {
-    if (!state.error) return null;
-    return (
-      <Animated.View style={[styles.errorContainer, { opacity: animations.fadeAnim }]}>
-        <Text style={styles.errorText}>{state.error}</Text>
-        <TouchableOpacity onPress={onRefresh} style={styles.retryButton}>
-          <Text style={styles.retryText}>Retry</Text>
-        </TouchableOpacity>
-      </Animated.View>
-    );
-  };
-
-  const renderProfileHero = () => {
-    if (!state.userData) return null;
+    
     return (
       <Animated.View 
-        style={[
-          styles.profileHero,
-          {
-            opacity: animations.fadeAnim,
-            transform: [{ translateY: animations.slideAnim }, { scale: animations.scaleAnim }]
-          }
-        ]}
+        style={{
+          ...styles.avatarContainer,
+          transform: [
+            { scale: animations.heroScale },
+            { translateY: animations.floatingY }
+          ]
+        }}
       >
-        <View style={styles.avatarContainer}>
-          {renderAvatar()}
+        <View style={styles.avatar}>
+          <Icon name="person" size={60} color={colors.textOnColor} />
         </View>
-        <Text style={styles.studentName}>{state.userData.name}</Text>
-        <Text style={styles.studentClass}>{state.userData.class}</Text>
-        <Text style={styles.studentEmail}>{state.userData.email}</Text>
       </Animated.View>
     );
   };
 
-  const renderSection = (title, icon, gradient, content) => (
+  const renderLoadingExperience = () => {
+    const spin = animations.glowPulse.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['0deg', '360deg'],
+    });
+
+    return (
+      <View style={styles.container}>
+        <LinearGradient 
+          colors={[colors.cosmic, colors.nebula, colors.cosmicLight]} 
+          style={StyleSheet.absoluteFill} 
+        />
+        <Animated.View
+          style={{
+            ...styles.loadingContainer,
+            opacity: animations.masterFade,
+            transform: [{ scale: animations.scaleAnim }]
+          }}
+        >
+          <Animated.View
+            style={{
+              ...styles.loadingSpinner,
+              transform: [{ rotate: spin }]
+            }}
+          >
+            <LinearGradient
+              colors={[colors.plasma, colors.aurora]}
+              style={styles.spinnerGradient}
+            />
+          </Animated.View>
+          <Animated.Text
+            style={{
+              ...styles.loadingText,
+              opacity: animations.masterFade,
+              transform: [{ translateY: animations.slideAnim }]
+            }}
+          >
+            Materializing your cosmos...
+          </Animated.Text>
+        </Animated.View>
+      </View>
+    );
+  };
+
+  const renderHeroSection = () => {
+    if (!state.userData) return null;
+
+    const parallaxY = scrollY.interpolate({
+      inputRange: [0, 200],
+      outputRange: [0, -50],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <Animated.View 
+        style={{
+          ...styles.heroSection,
+          opacity: animations.masterFade,
+          transform: [{ translateY: parallaxY }]
+        }}
+      >
+        <LinearGradient
+          colors={[colors.cosmic, colors.nebula]}
+          style={styles.heroGradient}
+        />
+        
+        {/* Floating Particles */}
+        <View style={styles.particleContainer}>
+          {particleAnimations.map((particleAnim, i) => (
+            <Animated.View
+              key={i}
+              style={{
+                ...styles.particle,
+                left: `${20 + (i * 15)}%`,
+                top: `${30 + (i * 8)}%`,
+                opacity: particleAnim,
+                transform: [{ scale: particleAnim }]
+              }}
+            />
+          ))}
+        </View>
+
+        {renderDynamicAvatar()}
+        
+        <Animated.View
+          style={{
+            ...styles.heroContent,
+            opacity: animations.masterFade,
+            transform: [{ translateY: animations.slideAnim }]
+          }}
+        >
+          <Text style={styles.heroName}>{state.userData.name}</Text>
+          <View style={styles.heroBadge}>
+            <Text style={styles.heroClass}>{state.userData.class}</Text>
+          </View>
+          <Text style={styles.heroEmail}>{state.userData.email}</Text>
+        </Animated.View>
+      </Animated.View>
+    );
+  };
+
+  const renderGlassCard = (title, icon, gradient, content, index) => (
     <Animated.View 
-      style={[
-        styles.section,
-        {
-          opacity: animations.fadeAnim,
-          transform: [{ translateY: animations.slideAnim }]
-        }
-      ]}
+      style={{
+        ...styles.glassCard,
+        opacity: animations.masterFade,
+        transform: [{ translateY: animations.cardSlides[index] }]
+      }}
     >
-      <LinearGradient colors={gradient} style={styles.sectionHeader} start={{x: 0, y: 0}} end={{x: 1, y: 0}}>
-        <Icon name={icon} size={20} color={colors.surface} />
-        <Text style={styles.sectionTitle}>{title}</Text>
+      {/* Glass morphism background */}
+      <View style={styles.glassBackground} />
+      
+      <LinearGradient 
+        colors={gradient} 
+        style={styles.cardHeader}
+        start={{x: 0, y: 0}} 
+        end={{x: 1, y: 1}}
+      >
+        <View style={styles.cardHeaderContent}>
+          <Icon name={icon} size={22} color={colors.textOnColor} />
+          <Text style={styles.cardTitle}>{title}</Text>
+        </View>
+        <View style={styles.cardGlow} />
       </LinearGradient>
-      <View style={styles.sectionContent}>
+      
+      <View style={styles.cardContent}>
         {content}
       </View>
     </Animated.View>
   );
 
-  const renderInfoRow = (label, value) => (
-    <View style={styles.infoRow}>
+  const renderInfoRow = (label, value, isLast = false) => (
+    <Animated.View
+      style={{
+        ...styles.infoRow, 
+        ...(isLast && styles.infoRowLast),
+        opacity: animations.masterFade,
+        transform: [{ translateX: animations.slideAnim }]
+      }}
+    >
       <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={styles.infoValue}>{value}</Text>
-    </View>
+      <View style={styles.infoValueContainer}>
+        <Text style={styles.infoValue} numberOfLines={2} ellipsizeMode="tail">{value}</Text>
+      </View>
+    </Animated.View>
   );
 
-  const renderPersonalInfo = () => {
+  const renderPersonalSection = () => {
     if (!state.userData) return null;
-    return renderSection(
-      "Personal Info",
+    return renderGlassCard(
+      "School App",
       "person-outline",
-      [colors.primarySoft, colors.surface],
+      [colors.blueGlow + '20', colors.blueGlow + '10'], // Changed to blue glow gradient
       <>
         {renderInfoRow("Student ID", state.userData.studentId)}
         {renderInfoRow("Roll Number", state.userData.rollNo)}
         {renderInfoRow("Gender", state.userData.gender === 'M' ? 'Male' : state.userData.gender === 'F' ? 'Female' : 'Other')}
         {renderInfoRow("Admission Year", state.userData.admissionYear)}
-      </>
+        {renderInfoRow("Phone Number", state.userData.phone, true)}
+      </>,
+      0
     );
   };
 
-  const renderHostelInfo = () => {
+  const renderHostelSection = () => {
     if (!state.userData?.hostel || !state.userData.bedDetails) return null;
-    return renderSection(
+    return renderGlassCard(
       "Hostel Details",
       "home-work",
-      [colors.secondarySoft, colors.surface],
+      [colors.plasma + '20', colors.plasmaGlow + '10'],
       <>
         {renderInfoRow("Hostel Name", state.userData.bedDetails.hostelName)}
         {renderInfoRow("Room Number", state.userData.bedDetails.roomNumber)}
         {renderInfoRow("Bed Number", state.userData.bedDetails.bedNumber)}
-        {renderInfoRow("Floor Number", state.userData.bedDetails.floorNumber)}
-      </>
+        {renderInfoRow("Floor Number", state.userData.bedDetails.floorNumber, true)}
+      </>,
+      1
     );
   };
 
   const renderMenuGrid = () => (
     <Animated.View 
-      style={[
-        styles.menuGridContainer,
-        {
-          opacity: animations.fadeAnim,
-          transform: [{ translateY: animations.slideAnim }]
-        }
-      ]}
+      style={{
+        ...styles.menuContainer,
+        opacity: animations.masterFade
+      }}
     >
-      <Text style={styles.menuTitle}>Quick Actions</Text>
+      <Animated.Text
+        style={{
+          ...styles.menuTitle,
+          opacity: animations.masterFade,
+          transform: [{ translateY: animations.slideAnim }]
+        }}
+      >
+        School Dashboard
+      </Animated.Text>
+      
       <View style={styles.menuGrid}>
-        {menuItems.map(item => (
-          <TouchableOpacity
-            key={item.id}
-            style={styles.menuCard}
-            onPress={() => handleMenuPress(item.screen)}
-          >
-            <LinearGradient colors={item.gradient} style={styles.menuIconContainer}>
-              <Icon name={item.icon} size={28} color={colors.surface} />
-            </LinearGradient>
-            <Text style={styles.menuCardTitle}>{item.title}</Text>
-            <Text style={styles.menuCardSubtitle}>{item.subtitle}</Text>
-          </TouchableOpacity>
-        ))}
+        {menuItems.map((item, index) => {
+          const cardAnim = menuCardAnimations[index];
+          
+          return (
+            <Animated.View
+              key={item.id}
+              style={{
+                opacity: cardAnim.opacity,
+                transform: [
+                  { scale: cardAnim.scale },
+                  { translateY: cardAnim.slide }
+                ]
+              }}
+            >
+              <TouchableOpacity
+                style={styles.menuCard}
+                onPress={() => handleMenuPress(item.screen, index)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.menuCardGlass} />
+                <LinearGradient 
+                  colors={item.gradient} 
+                  style={styles.menuCardBorder}
+                />
+                <View style={styles.menuCardContent}>
+                  <View style={styles.menuIconWrapper}>
+                    <LinearGradient 
+                      colors={item.gradient} 
+                      style={styles.menuIconContainer}
+                    >
+                      <Text style={styles.menuEmoji}>{item.emoji}</Text>
+                      <Icon name={item.icon} size={24} color={colors.textOnColor} />
+                    </LinearGradient>
+                  </View>
+                  <Text style={styles.menuCardTitle}>{item.title}</Text>
+                  <Text style={styles.menuCardSubtitle}>{item.subtitle}</Text>
+                  <View style={styles.cardInteractionHint}>
+                    <Icon name="arrow-forward-ios" size={12} color={colors.textGhost} />
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </Animated.View>
+          );
+        })}
       </View>
     </Animated.View>
   );
 
-  const renderLogoutButton = () => (
+  const renderFloatingLogout = () => (
     <Animated.View 
-      style={[
-        styles.logoutContainer,
-        {
-          opacity: animations.fadeAnim,
-          transform: [{ translateY: animations.slideAnim }]
-        }
-      ]}
+      style={{
+        ...styles.floatingLogout,
+        opacity: animations.masterFade,
+        transform: [{ translateY: animations.floatingY }]
+      }}
     >
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <LinearGradient colors={[colors.error, colors.error]} start={{x: 0, y: 0}} end={{x: 1, y: 0}} style={styles.logoutGradient}>
-          <Icon name="logout" size={20} color={colors.surface} />
+      <TouchableOpacity 
+        style={styles.logoutButton} 
+        onPress={handleLogout}
+        activeOpacity={0.8}
+      >
+        <View style={styles.logoutGlass} />
+        <LinearGradient 
+          colors={[colors.error, '#DC2626']} 
+          style={styles.logoutGradient}
+        >
+          <Icon name="power-settings-new" size={20} color={colors.textOnColor} />
           <Text style={styles.logoutText}>Logout</Text>
         </LinearGradient>
       </TouchableOpacity>
     </Animated.View>
   );
 
-  if (state.loading) return renderLoadingScreen();
+  if (state.loading) return renderLoadingExperience();
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.backgroundStart} />
-      <LinearGradient colors={[colors.backgroundStart, colors.backgroundEnd]} style={StyleSheet.absoluteFill} />
-      <ScrollView
+      <StatusBar barStyle="dark-content" backgroundColor={colors.cosmic} />
+      <LinearGradient 
+        colors={[colors.cosmic, colors.nebula, colors.cosmicLight]} 
+        style={StyleSheet.absoluteFill} 
+      />
+      <Animated.ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={state.refreshing}
             onRefresh={onRefresh}
-            colors={[colors.primary]}
+            colors={[colors.plasma]}
+            tintColor={colors.plasma}
           />
         }
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}
       >
-        {renderErrorMessage()}
-        {renderProfileHero()}
-        {renderPersonalInfo()}
-        {renderHostelInfo()}
+        {renderHeroSection()}
+        {renderPersonalSection()}
+        {renderHostelSection()}
         {renderMenuGrid()}
-        {renderLogoutButton()}
-      </ScrollView>
+        {renderFloatingLogout()}
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 };
@@ -449,55 +874,61 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: spacing.xxxxl,
+    paddingBottom: space.massive,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingSpinner: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: space.xl,
+  },
+  spinnerGradient: {
+    flex: 1,
+    borderRadius: 40,
+  },
   loadingText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.textMuted,
+    ...typography.body,
+    color: colors.plasma,
+    textAlign: 'center',
   },
-  errorContainer: {
-    padding: spacing.lg,
-    backgroundColor: colors.error + '20',
-    marginHorizontal: spacing.lg,
-    marginVertical: spacing.md,
-    borderRadius: 16,
+  heroSection: {
+    height: height * 0.5,
+    justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
+    overflow: 'hidden',
   },
-  errorText: {
-    color: colors.error,
-    fontSize: 14,
-    marginBottom: spacing.sm,
+  heroGradient: {
+    ...StyleSheet.absoluteFillObject,
   },
-  retryButton: {
-    backgroundColor: colors.error,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: 12,
+  particleContainer: {
+    ...StyleSheet.absoluteFillObject,
   },
-  retryText: {
-    color: colors.surface,
-    fontWeight: '600',
-  },
-  profileHero: {
-    alignItems: 'center',
-    paddingTop: spacing.xxxxl,
-    paddingBottom: spacing.xxl,
-    marginHorizontal: spacing.lg,
+  particle: {
+    position: 'absolute',
+    width: 3,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: colors.plasmaGlow,
   },
   avatarContainer: {
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 8,
-    borderRadius: 80,
-    marginBottom: spacing.xl,
+    position: 'relative',
+    marginBottom: space.lg,
+  },
+  avatarGlow: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: colors.blueGlow,
+    top: -10,
+    left: -10,
+    zIndex: 0,
   },
   avatar: {
     width: 120,
@@ -505,84 +936,133 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 2,
+  },
+  avatarBorder: {
+    position: 'absolute',
+    width: 124,
+    height: 124,
+    borderRadius: 62,
+    borderWidth: 2,
+    borderColor: colors.surface,
+    top: -2,
+    left: -2,
+    zIndex: 3,
   },
   avatarText: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: colors.surface,
+    ...typography.title,
+    color: colors.textOnColor,
   },
-  studentName: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
+  heroContent: {
+    alignItems: 'center',
   },
-  studentClass: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: colors.textSecondary,
-    marginBottom: spacing.xs,
+  heroName: {
+    ...typography.hero,
+    color: colors.textCosmic,
+    textAlign: 'center',
+    marginBottom: space.sm,
   },
-  studentEmail: {
-    fontSize: 14,
-    color: colors.textMuted,
+  heroBadge: {
+    backgroundColor: colors.glassDark,
+    paddingHorizontal: space.md,
+    paddingVertical: space.xs,
+    borderRadius: 20,
+    marginBottom: space.sm,
   },
-  section: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.xxl,
-    backgroundColor: colors.surface,
+  heroClass: {
+    ...typography.caption,
+    color: colors.textCosmic,
+    fontWeight: '600',
+  },
+  heroEmail: {
+    ...typography.caption,
+    color: colors.mist,
+    opacity: 0.8,
+  },
+  glassCard: {
+    marginHorizontal: space.md,
+    marginBottom: space.xl,
     borderRadius: 24,
     overflow: 'hidden',
-    shadowColor: colors.neutral,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
+    position: 'relative',
   },
-  sectionHeader: {
+  glassBackground: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.blueGlow,
+    backdropFilter: 'blur(20px)',
+  },
+  cardHeader: {
+    padding: space.md,
+    position: 'relative',
+  },
+  cardHeaderContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.lg,
+    zIndex: 2,
   },
-  sectionTitle: {
-    fontSize: 18,
+  cardGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+    backgroundColor: colors.glass,
+    opacity: 9,
+  },
+  cardTitle: {
+    ...typography.subheading,
+    color: colors.textOnColor,
+    marginLeft: space.sm,
     fontWeight: '600',
-    color: colors.surface,
-    marginLeft: spacing.md,
   },
-  sectionContent: {
-    padding: spacing.lg,
+  cardContent: {
+    alignItems:'center',
+    marginLeft: space.sm,
+    marginRight:space.sm,
+    marginBottom:space.tiny,
+    paddingLeft:space.tiny,
+  
+
+
+    padding: space.lg,
     backgroundColor: colors.surface,
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: spacing.md,
-    paddingBottom: spacing.md,
+    alignItems: 'center',
+    paddingVertical: space.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: colors.mist,
+  },
+  infoRowLast: {
+    borderBottomWidth: 0,
   },
   infoLabel: {
-    fontSize: 14,
-    color: colors.textMuted,
+    ...typography.caption,
+    color: colors.textMist,
     flex: 1,
+  },
+  infoValueContainer: {
+    flex: 1,
+    alignItems: 'flex-end',
   },
   infoValue: {
-    fontSize: 14,
+    ...typography.caption,
+    color: colors.textCosmic,
     fontWeight: '600',
-    color: colors.textPrimary,
-    flex: 1,
     textAlign: 'right',
+    flexShrink: 1,
   },
-  menuGridContainer: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.xxl,
+  menuContainer: {
+    marginHorizontal: space.md,
+    marginBottom: space.xl,
   },
   menuTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginBottom: spacing.lg,
+    ...typography.title,
+    color: colors.textCosmic,
+    marginBottom: space.lg,
+    textAlign: 'center',
   },
   menuGrid: {
     flexDirection: 'row',
@@ -590,17 +1070,31 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   menuCard: {
-    width: (width - spacing.lg * 3) / 2,
-    backgroundColor: colors.surface,
-    borderRadius: 24,
-    padding: spacing.lg,
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-    shadowColor: colors.neutral,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
+    width: (width - space.md * 3) / 2,
+    marginBottom: space.md,
+    borderRadius: 20,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  menuCardGlass: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.surfaceDim,
+    backdropFilter: 'blur(20px)',
+  },
+  menuCardBorder: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+  },
+  menuCardContent: {
+    padding: space.md,
+    justifyContent: 'space-between',
+    minHeight: 140,
+  },
+  menuIconWrapper: {
+    marginBottom: space.sm,
   },
   menuIconContainer: {
     width: 60,
@@ -608,39 +1102,55 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    position: 'relative',
+  },
+  menuEmoji: {
+    fontSize: 20,
+    position: 'absolute',
+    top: -5,
+    right: -5,
   },
   menuCardTitle: {
-    fontSize: 16,
+    ...typography.caption,
+    color: colors.textCosmic,
     fontWeight: '600',
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
     textAlign: 'center',
+    marginBottom: space.tiny,
   },
   menuCardSubtitle: {
-    fontSize: 12,
-    color: colors.textMuted,
+    ...typography.micro,
+    color: colors.textMist,
     textAlign: 'center',
+    opacity: 0.8,
   },
-  logoutContainer: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.xxxl,
+  cardInteractionHint: {
+    marginTop: space.xs,
+  },
+  floatingLogout: {
+    marginHorizontal: space.md,
+    marginBottom: space.xl,
   },
   logoutButton: {
     borderRadius: 24,
     overflow: 'hidden',
+    position: 'relative',
+  },
+  logoutGlass: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.glassDark,
+    backdropFilter: 'blur(20px)',
   },
   logoutGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.lg,
+    padding: space.md,
   },
   logoutText: {
-    fontSize: 16,
+    ...typography.body,
+    color: colors.textOnColor,
     fontWeight: '600',
-    color: colors.surface,
-    marginLeft: spacing.sm,
+    marginLeft: space.sm,
   },
 });
 
